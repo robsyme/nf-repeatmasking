@@ -9,7 +9,7 @@
   I'm unable to include the library in the Docker image.
 
   To build your own image that /does/ include the RepBase libraries,
-  simply run:
+  run:
 
   #+BEGIN_SRC sh
     cd `mktemp -d`
