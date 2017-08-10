@@ -1,8 +1,7 @@
 #!/usr/bin/env nextflow
-params.strain = 'example'
-params.reference = "data/${params.strain}/*.fasta"
-params.trnanuc = 'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'
+params.reference = 'data/example/genome.fasta'
 params.trnaprot = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
+params.trnanuc = 'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'
 params.outdir = 'output'
 
 trnanuc = file(params.trnanuc)
@@ -240,33 +239,33 @@ rmshortinner.pl seqfile.outinner.unmasked 50 > seqfile.outinner.clean
 }
 
 process blastX {
-	tag { age }
+   tag { age }
 
-    input:
-	file 'Tpases020812DNA.fasta' from trnaprot
-    set age, 'seqfile.outinner.clean', 'seqfile.outinner' from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
+   input:
+   file 'Tpases020812DNA.fasta' from trnaprot
+   set age, 'seqfile.outinner.clean', 'seqfile.outinner' from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
 
-    output:
-    set age, 'passed_outinner_sequence.fasta' into blastxPassed
+   output:
+   set age, 'passed_outinner_sequence.fasta' into blastxPassed
 
-    """
-  makeblastdb -in Tpases020812DNA.fasta -dbtype prot
-  blastx \
-   -query seqfile.outinner.clean \
-   -db Tpases020812DNA.fasta \
-   -evalue 1e-10 \
-   -num_descriptions 10 \
-   -out seqfile.outinner.clean_blastx.out.txt
+   """
+ makeblastdb -in Tpases020812DNA.fasta -dbtype prot
+ blastx \
+  -query seqfile.outinner.clean \
+  -db Tpases020812DNA.fasta \
+  -evalue 1e-10 \
+  -num_descriptions 10 \
+  -out seqfile.outinner.clean_blastx.out.txt
 
-  outinner_blastx_parse.pl \
-   --blastx seqfile.outinner.clean_blastx.out.txt \
-   --outinner seqfile.outinner
+ outinner_blastx_parse.pl \
+  --blastx seqfile.outinner.clean_blastx.out.txt \
+  --outinner seqfile.outinner
 
-  if [ ! -s passed_outinner_sequence.fasta ]; then
-	echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
-  fi
-    """
-  }
+ if [ ! -s passed_outinner_sequence.fasta ]; then
+echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
+ fi
+   """
+ }
 
 blastxPassed
 .combine(step3PassedForExamplars, by: 0)
