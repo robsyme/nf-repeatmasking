@@ -29,6 +29,9 @@ yourself for free (academic use only) and bundle it into a new docker
 image yourself:
 
 ```sh
+# We don't need the tar.gz once the image is built, so we'll use a temporary directory.
+cd `mktemp -d`
+
 # Download the RepBase repeat library (replace RB_USERNAME and RB_PASSWORD with your username and password)
 wget --user $RB_USERNAME \
 	 --password $RB_PASSWORD \
@@ -45,7 +48,7 @@ echo "FROM robsyme/repeatmasker-onbuild" > Dockerfile
 
 # Build a new docker images called 'repeats'.
 #  When building, this image looks for a file called 'repeatmaskerlibraries.tar.gz' which it pulls into the image.
-docker build -t repeats .
+docker build -t nf-repeatmasking .
 ```
 
 ## Natively
