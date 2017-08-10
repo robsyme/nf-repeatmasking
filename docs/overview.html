@@ -1,0 +1,1069 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2017-08-10 Thu 11:29 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Repeat Masking Pipeline</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Robert Syme" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link href="./theme.css" rel="stylesheet">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Repeat Masking Pipeline</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgb84cb31">1. Installing</a></li>
+<li><a href="#org4607127">2. Walkthrough</a>
+<ul>
+<li><a href="#org122d24f">2.1. Introduction</a></li>
+<li><a href="#orga3c3ba7">2.2. Parameter Setup</a></li>
+<li><a href="#org018ab28">2.3. MITEs</a></li>
+<li><a href="#org1f33736">2.4. Collection of relatively recent LTR retrotranposons</a></li>
+<li><a href="#org3f73731">2.5. Collection of relatively old LTR retrotransposons</a></li>
+<li><a href="#org9ac88f2">2.6. Cleaning LTR results</a></li>
+<li><a href="#orga0305da">2.7. Identify elements with nested insertions</a></li>
+<li><a href="#org6bf8c31">2.8. Final Masking</a></li>
+<li><a href="#org864c0eb">2.9. Summary tables and figures</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgb84cb31" class="outline-2">
+<h2 id="orgb84cb31"><span class="section-number-2">1</span> Installing</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Ideally, the only prerequisites would be <a href="https://www.nextflow.io/">Nextflow</a> and
+<a href="https://www.docker.com/">Docker</a>. Unfortunately, it's almost impossible to do work on repeats
+without the RepBase library which carries licence restrictions so
+I'm unable to include the library in the Docker image.
+</p>
+
+<p>
+To build your own image that <i>does</i> include the RepBase libraries,
+simply run:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span class="org-builtin">cd</span> <span class="org-sh-quoted-exec">`mktemp -d`</span>
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">Download the RepBase repeat library (replace RB_USERNAME and RB_PASSWORD with your username and password)</span>
+wget --user $<span class="org-variable-name">RB_USERNAME</span> <span class="org-sh-escaped-newline">\</span>
+     --password $<span class="org-variable-name">RB_PASSWORD</span> <span class="org-sh-escaped-newline">\</span>
+     --output-document repeatmaskerlibraries.tar.gz <span class="org-sh-escaped-newline">\</span>
+     http://www.girinst.org/server/RepBase/protected/repeatmaskerlibraries/repeatmaskerlibraries-20140131.tar.gz
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">Rename the tar.gz archive to 'repeatmaskerlibraries.tar.gz'</span>
+mv repeatmaskerlibraries-20140131.tar.gz repeatmaskerlibraries.tar.gz
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">Make an (almost) empty Dockerfile.</span>
+<span class="org-comment-delimiter">#  </span><span class="org-comment">All of the important instructions are in the repeatmasker-onbuild image</span>
+<span class="org-comment-delimiter">#  </span><span class="org-comment">You can view them here: https://github.com/robsyme/nextflow-annotate/blob/master/Dockerfiles/RepeatMasker-onbuild/Dockerfile</span>
+<span class="org-builtin">echo</span> <span class="org-string">"FROM robsyme/nf-repeatmasking-onbuild"</span> &gt; Dockerfile
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">Build a new docker images called 'repeats'. </span>
+<span class="org-comment-delimiter">#  </span><span class="org-comment">When building, this image looks for a file called 'repeatmaskerlibraries.tar.gz' which it pulls into the image.</span>
+docker build -t nf-repeatmasking .
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4607127" class="outline-2">
+<h2 id="org4607127"><span class="section-number-2">2</span> Walkthrough</h2>
+<div class="outline-text-2" id="text-2">
+</div><div id="outline-container-org122d24f" class="outline-3">
+<h3 id="org122d24f"><span class="section-number-3">2.1</span> Introduction</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+This is a <a href="https://en.wikipedia.org/wiki/Literate_programming">literate-programming</a> style walk through the pipeline,
+explaining the utility of every section. Each code block below gets
+tangled to compose the  pipline, which is written out to <a href="../main.nf"><code>main.nf</code></a>.
+</p>
+</div>
+</div>
+<div id="outline-container-orga3c3ba7" class="outline-3">
+<h3 id="orga3c3ba7"><span class="section-number-3">2.2</span> Parameter Setup</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+There is some necessary setup and housekeeping to begin. This is
+where we set up our strain name, the path to our reference sequence
+and the output location for our final figures and tables.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy">params.strain = <span class="org-string">'example'</span>
+params.reference = <span class="org-string">"data/${params.strain}/*.fasta"</span>
+params.trnanuc = <span class="org-string">'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'</span>
+params.trnaprot = <span class="org-string">'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'</span>
+params.outdir = <span class="org-string">'output'</span>
+
+trnanuc = file(params.trnanuc)
+trnaprot = file(params.trnaprot)
+reference = file(params.reference)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org018ab28" class="outline-3">
+<h3 id="org018ab28"><span class="section-number-3">2.3</span> MITEs</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+MITEs are collected using MITE-Hunter with all default parameters.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">mitehunter</span> {
+  cpus 10
+
+  input:
+  file <span class="org-string">'genome.fasta'</span> from reference
+
+  output:
+  file <span class="org-string">'MITE.lib'</span> into mitelib
+
+  <span class="org-string">"""</span>
+<span class="org-string">MITE_Hunter_manager.pl -i genome.fasta -n ${task.cpus} -S 12345678</span>
+<span class="org-string">cat *Step8*.fa &gt; MITE.lib</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+
+<p>
+We have a channel <code>mitelib</code> that contains our putative MITE
+sequences. Their fasta ids are not named according to the
+RepeatMasker convention, so to have them recognised correctly, we
+add '<code>#MITE</code>' to the end of each fasta id. The resulting channel
+is also duplicated as we use the renamed fasta file at a number of
+later stages:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy">mitelib
+.splitFasta(record: [id: <span class="org-constant">true</span>, sequence: <span class="org-constant">true</span> ])
+.collectFile( name: <span class="org-string">'MITE.lib'</span> ) { <span class="org-string">"&gt;"</span> + it.id + <span class="org-string">"#MITE\n"</span> + it.sequence }
+.tap { mitelib1 }
+.tap { mitelib2 }
+.set { mitelib3 }
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org1f33736" class="outline-3">
+<h3 id="org1f33736"><span class="section-number-3">2.4</span> Collection of relatively recent LTR retrotranposons</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+The rationale for initial collection of recent LTR elements is
+that these elements contain less nested insertions and mutations
+as well as recombination, thus the chance for false positives is
+relatively low. We use the ltrharvest command from <a href="http://genometools.org">genometools</a> to
+collect potential LTR sequences with the following
+characteristics:
+</p>
+
+<ul class="org-ul">
+<li>Two terminal repeats which are &gt;= 99% similar, ranging from 100 bp tp 6000 bp</li>
+<li>The two terminal repeats end with “TG…CA”</li>
+<li>The size of entire element ranges from 1.5 kb to 25 kb</li>
+<li>The element must be flanked by a 5bp TSD (target site duplication)</li>
+<li>The TSD is within 10 bp from the end of the element</li>
+</ul>
+
+<p>
+The results are then passed through <code>ltrdigest</code> (again, from
+genometools) to retain only those elements with polypurine tract
+(PPT) and primer binding site (PBS).
+</p>
+
+<p>
+The <code>CRL_Step1</code> script ensures that at least 50% of the PPT or PBS
+sequences are located in the internal regions and the distance
+between LTR and PPT or PBS are no more than 20 bp.
+</p>
+
+<p>
+The <code>CRL_Step2</code> script filters again. False positives due to gene
+clusters may still linger in the output from <code>CRL_Step1</code>. These
+instances will have alignable regions that extend past the LTR
+boundary. We pull out the flanking sequence from the putative LTR,
+and if the flanking sequence <i>also</i> aligns, we discard it.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">recentLTRs</span> {
+  <span class="org-constant">input</span>:
+  file <span class="org-string">'genome.fasta'</span> from reference
+  file <span class="org-string">'eukaryotic-tRNAs.fasta.gz'</span> from trnanuc
+
+  output:
+  set age, <span class="org-string">'seqfile.result'</span> into ltrHarvestNew
+  set age, <span class="org-string">'seqfile.outinner'</span> into ltrInnerSeqNew
+  set age, <span class="org-string">'CRL_Step2_Passed_Elements.fasta'</span>, <span class="org-string">'Repeat_down*.fasta'</span>, <span class="org-string">'Repeat_up*.fasta'</span> into recentLTRs
+
+  script:
+  age = <span class="org-string">'new'</span>
+  <span class="org-string">"""</span>
+<span class="org-string">gt suffixerator -db genome.fasta -indexname genome.fasta -tis -suf -lcp -des -ssp -dna</span>
+
+<span class="org-string">gt ltrharvest \</span>
+<span class="org-string"> -index genome.fasta \</span>
+<span class="org-string"> -out seqfile.out \</span>
+<span class="org-string"> -outinner seqfile.outinner \</span>
+<span class="org-string"> -gff3 seqfile.gff \</span>
+<span class="org-string"> -minlenltr 100 \</span>
+<span class="org-string"> -maxlenltr 6000 \</span>
+<span class="org-string"> -mindistltr 1500 \</span>
+<span class="org-string"> -maxdistltr 25000 \</span>
+<span class="org-string"> -mintsd 5 \</span>
+<span class="org-string"> -maxtsd 5 \</span>
+<span class="org-string"> -motif tgca \</span>
+<span class="org-string"> -similar 99 \</span>
+<span class="org-string"> -vic 10 \</span>
+<span class="org-string">&gt; seqfile.result</span>
+
+<span class="org-string">gt gff3 \</span>
+<span class="org-string"> -sort seqfile.gff \</span>
+<span class="org-string">&gt; seqfile.gff.sort</span>
+
+<span class="org-string">zcat eukaryotic-tRNAs.fasta.gz &gt; eukaryotic-tRNAs.fasta</span>
+
+<span class="org-string">gt ltrdigest \</span>
+<span class="org-string"> -trnas eukaryotic-tRNAs.fasta \</span>
+<span class="org-string"> seqfile.gff.sort \</span>
+<span class="org-string"> genome.fasta \</span>
+<span class="org-string">&gt; seqfile.gff.dgt</span>
+
+<span class="org-string">CRL_Step1.pl \</span>
+<span class="org-string"> --gff seqfile.gff.dgt</span>
+
+<span class="org-string">CRL_Step2.pl \</span>
+<span class="org-string"> --step1 CRL_Step1_Passed_Elements.txt \</span>
+<span class="org-string"> --repeatfile seqfile.out \</span>
+<span class="org-string"> --resultfile seqfile.result \</span>
+<span class="org-string"> --sequencefile genome.fasta \</span>
+<span class="org-string"> --removed_repeats CRL_Step2_Passed_Elements.fasta</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3f73731" class="outline-3">
+<h3 id="org3f73731"><span class="section-number-3">2.5</span> Collection of relatively old LTR retrotransposons</h3>
+<div class="outline-text-3" id="text-2-5">
+<p>
+Collection of relatively old LTRs is enabled by reducing the
+similarity between LTRs to 85% (default value of LTRharvest) and
+not associated with terminal sequence motif (but the process is
+otherwise identical to <code>recentLTRs</code>).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">olderLTRs</span> {
+  <span class="org-constant">input</span>:
+  file <span class="org-string">'genome.fasta'</span> from reference
+  file <span class="org-string">'eukaryotic-tRNAs.fasta.gz'</span> from trnanuc
+
+  output:
+  set age, <span class="org-string">'seqfile.result'</span> into ltrHarvestOld
+  set age, <span class="org-string">'seqfile.outinner'</span> into ltrInnerSeqOld
+  set age, <span class="org-string">'CRL_Step2_Passed_Elements.fasta'</span>, <span class="org-string">'Repeat_*.fasta'</span> into olderLTRs
+
+  script:
+  age = <span class="org-string">'old'</span>
+  <span class="org-string">"""</span>
+<span class="org-string">gt suffixerator -db genome.fasta -indexname genome.fasta -tis -suf -lcp -des -ssp -dna</span>
+
+<span class="org-string">gt ltrharvest \</span>
+<span class="org-string"> -index genome.fasta \</span>
+<span class="org-string"> -out seqfile.out \</span>
+<span class="org-string"> -outinner seqfile.outinner \</span>
+<span class="org-string"> -gff3 seqfile.gff \</span>
+<span class="org-string"> -minlenltr 100 \</span>
+<span class="org-string"> -maxlenltr 6000 \</span>
+<span class="org-string"> -mindistltr 1500 \</span>
+<span class="org-string"> -maxdistltr 25000 \</span>
+<span class="org-string"> -mintsd 5 \</span>
+<span class="org-string"> -maxtsd 5 \</span>
+<span class="org-string"> -vic 10 \</span>
+<span class="org-string">&gt; seqfile.result</span>
+
+<span class="org-string">gt gff3 \</span>
+<span class="org-string"> -sort seqfile.gff \</span>
+<span class="org-string">&gt; seqfile.gff.sort</span>
+
+<span class="org-string">zcat eukaryotic-tRNAs.fasta.gz &gt; eukaryotic-tRNAs.fasta</span>
+
+<span class="org-string">gt ltrdigest \</span>
+<span class="org-string"> -trnas eukaryotic-tRNAs.fasta \</span>
+<span class="org-string"> seqfile.gff.sort \</span>
+<span class="org-string"> genome.fasta \</span>
+<span class="org-string">&gt; seqfile.gff.dgt</span>
+
+<span class="org-string">CRL_Step1.pl \</span>
+<span class="org-string"> --gff seqfile.gff.dgt</span>
+
+<span class="org-string">CRL_Step2.pl \</span>
+<span class="org-string"> --step1 CRL_Step1_Passed_Elements.txt \</span>
+<span class="org-string"> --repeatfile seqfile.out \</span>
+<span class="org-string"> --resultfile seqfile.result \</span>
+<span class="org-string"> --sequencefile genome.fasta \</span>
+<span class="org-string"> --removed_repeats CRL_Step2_Passed_Elements.fasta</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9ac88f2" class="outline-3">
+<h3 id="org9ac88f2"><span class="section-number-3">2.6</span> Cleaning LTR results</h3>
+<div class="outline-text-3" id="text-2-6">
+<p>
+LTRs (both new and old) identified above will almost certainly
+include false positives that need to be removed. The most common
+errors are:
+</p>
+
+<ul class="org-ul">
+<li>Tandem local repeats (such as centromeric repeats)</li>
+<li>Local gene clusters derived from gene duplications</li>
+</ul>
+
+<p>
+In the case of genuine LTRs, the insertion site will differ
+between LTR instances. The result is that alignment between two
+instances will not extend past the borders of the terminal repeat
+regions. In false positive instances like the examples above, the
+alignability of the instances may extend past the terminal
+repeats. :TODO: Present dot-plot examples of true and false LTRs.
+</p>
+
+<p>
+The outupt of this process (<code>CRL_Step3_Passed_Elements.fasta</code>) is
+a FASTA file containing element sequences that have passed the
+percent identity (60%) and number of identical nucleotides
+thresholds.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy">ltrHarvestNew
+.tap { ltrHarvestResultsNew }
+.set { ltrHarvestResultsForExamplarNew }
+
+ltrInnerSeqNew
+.tap { ltrHarvestInnerNew }
+.set { outinnerForBlastXNew }
+
+ltrHarvestOld
+.tap { ltrHarvestResultsOld }
+.set { ltrHarvestResultsForExamplarOld }
+
+ltrInnerSeqOld
+.tap { ltrHarvestInnerOld }
+.set { outinnerForBlastXOld }
+
+ltrs = recentLTRs.mix(olderLTRs)
+ltrHarvestResults = ltrHarvestResultsOld.mix(ltrHarvestResultsNew)
+ltrHarvestInner = ltrHarvestInnerOld.mix(ltrHarvestInnerNew)
+outinnerForBlastX = outinnerForBlastXOld.mix(outinnerForBlastXNew)
+ltrHarvestResultsForExamplar = ltrHarvestResultsForExamplarOld.mix(ltrHarvestResultsForExamplarNew)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">CRL_Step3</span> {
+  tag { age }
+  <span class="org-constant">input</span>:
+  <span class="org-type">set</span> <span class="org-variable-name">age</span>, <span class="org-string">'CRL_Step2_Passed_Elements.fasta'</span>, <span class="org-string">'Repeat_down*.fasta'</span>, <span class="org-string">'Repeat_up*.fasta'</span> from ltrs
+
+  output:
+  set age, <span class="org-string">'CRL_Step3_Passed_Elements.fasta'</span> into step3Passed
+  set age, <span class="org-string">'CRL_Step3_Passed_Elements.fasta'</span> into step3PassedForExamplars
+
+  <span class="org-string">"""</span>
+<span class="org-string">CRL_Step3.pl \</span>
+<span class="org-string"> --directory . \</span>
+<span class="org-string"> --step2 CRL_Step2_Passed_Elements.fasta \</span>
+<span class="org-string"> --pidentity 60 \</span>
+<span class="org-string"> --seq_c 25</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+
+<p>
+Retrotranposons are frequently nested with each other or inserted
+by other elements. If left unidentified, it will cause
+misclassification and other complications. To detect those
+elements, LTR sequences from candidate elements retained after
+steps in 2.1.3 are used to mask the putative internal regions. If
+LTR sequences are detected in the internal regions, it is
+considered as elements nested with other insertions.
+</p>
+
+<p>
+If internal regions of elements match sequences in MITE.lib (see
+1.), they are also considered as elements with nested
+insertions.
+</p>
+
+<p>
+The internal regions of elements are also used to search against
+a transposase database of DNA transposons. If the internal
+sequence has significant matches with any DNA transposase, it is
+considered as an element containing nested insertions.
+</p>
+
+<p>
+This process produces <code>lLTR_Only.lib</code>, a FASTA file containing
+the sequence of the left (5'end) LTR sequence.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy">ltrHarvestResults
+.combine(step3Passed, by: 0)
+.combine(mitelib1)
+.combine(reference)
+.set { nestedInput }
+
+<span class="org-type">process</span> <span class="org-variable-name">identifyNestedInsetions</span> {
+  tag { age }
+  <span class="org-constant">input</span>:
+  <span class="org-type">set</span> <span class="org-variable-name">age</span>, <span class="org-string">'seqfile.result'</span>, <span class="org-string">'CRL_Step3_Passed_Elements.fasta'</span>, <span class="org-string">'MITE.lib'</span>, <span class="org-string">'genome.fasta'</span> from nestedInput
+
+  output:
+  set age, <span class="org-string">'repeats_to_mask_LTR.fasta'</span> into repeatsToMaskLTR
+
+  <span class="org-string">"""</span>
+<span class="org-string">ltr_library.pl \</span>
+<span class="org-string"> --resultfile seqfile.result \</span>
+<span class="org-string"> --step3 CRL_Step3_Passed_Elements.fasta \</span>
+<span class="org-string"> --sequencefile genome.fasta</span>
+<span class="org-string">cat MITE.lib lLTR_Only.lib \</span>
+<span class="org-string">| awk 'BEGIN {RS = "</span>&gt;<span class="org-string">" ; FS = "</span>\\n<span class="org-string">" ; ORS = ""} \$2 {print "</span>&gt;<span class="org-warning">"</span><span class="org-string">\$0}' \</span>
+<span class="org-string">&gt; repeats_to_mask_LTR.fasta</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga0305da" class="outline-3">
+<h3 id="orga0305da"><span class="section-number-3">2.7</span> Identify elements with nested insertions</h3>
+<div class="outline-text-3" id="text-2-7">
+<p>
+Retrotranposons are frequently nested with each other or inserted
+by other elements. If left unidentified, it will cause
+misclassification and other complications. To detect those
+elements, LTR sequences from candidate elements retained after
+steps in == are used to mask the putative internal regions. If
+LTR sequences are detected in the internal regions, it is
+considered as elements nested with other insertions.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">RepeatMasker1</span> {
+  container <span class="org-string">'robsyme/repeatmasker-onbuild'</span>
+  tag { age }
+
+  <span class="org-constant">input</span>:
+  <span class="org-type">set</span> <span class="org-variable-name">age</span>, <span class="org-string">'repeats_to_mask_LTR.fasta'</span>, <span class="org-string">'seqfile.outinner'</span> from repeatsToMaskLTR.combine(ltrHarvestInner, by: 0)
+
+  output:
+  set age, <span class="org-string">'seqfile.outinner.out'</span>, <span class="org-string">'seqfile.outinner.masked'</span> into repeatMasker1Unclean
+
+  <span class="org-string">"""</span>
+<span class="org-string">RepeatMasker \</span>
+<span class="org-string"> -lib repeats_to_mask_LTR.fasta \</span>
+<span class="org-string"> -nolow \</span>
+<span class="org-string"> -no_is \</span>
+<span class="org-string"> -dir . \</span>
+<span class="org-string"> seqfile.outinner</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">cleanRM</span> {
+  tag { age }
+
+  <span class="org-constant">input</span>:
+  <span class="org-type">set</span> <span class="org-variable-name">age</span>, <span class="org-string">'seqfile.outinner.out'</span>, <span class="org-string">'seqfile.outinner.masked'</span> from repeatMasker1Unclean
+
+  output:
+  set age, <span class="org-string">'seqfile.outinner.clean'</span> into repeatMasker1Clean
+
+  <span class="org-string">"""</span>
+<span class="org-string">cleanRM.pl seqfile.outinner.out seqfile.outinner.masked &gt; seqfile.outinner.unmasked</span>
+<span class="org-string">rmshortinner.pl seqfile.outinner.unmasked 50 &gt; seqfile.outinner.clean</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">blastX</span> {
+    tag { age }
+
+    <span class="org-constant">input</span>:
+    file <span class="org-string">'Tpases020812DNA.fasta'</span> from trnaprot
+    set age, <span class="org-string">'seqfile.outinner.clean'</span>, <span class="org-string">'seqfile.outinner'</span> from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
+
+    output:
+    set age, <span class="org-string">'passed_outinner_sequence.fasta'</span> into blastxPassed
+
+    <span class="org-string">"""</span>
+<span class="org-string">  makeblastdb -in Tpases020812DNA.fasta -dbtype prot</span>
+<span class="org-string">  blastx \</span>
+<span class="org-string">   -query seqfile.outinner.clean \</span>
+<span class="org-string">   -db Tpases020812DNA.fasta \</span>
+<span class="org-string">   -evalue 1e-10 \</span>
+<span class="org-string">   -num_descriptions 10 \</span>
+<span class="org-string">   -out seqfile.outinner.clean_blastx.out.txt</span>
+
+<span class="org-string">  outinner_blastx_parse.pl \</span>
+<span class="org-string">   --blastx seqfile.outinner.clean_blastx.out.txt \</span>
+<span class="org-string">   --outinner seqfile.outinner</span>
+
+<span class="org-string">  if [ ! -s passed_outinner_sequence.fasta ]; then</span>
+<span class="org-string">    echo -e '&gt;dummy empty sequence\nACTACTAC' &gt; passed_outinner_sequence.fasta</span>
+<span class="org-string">  fi</span>
+<span class="org-string">    """</span>
+  }
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-groovy">blastxPassed
+.combine(step3PassedForExamplars, by: 0)
+.combine(ltrHarvestResultsForExamplar, by: 0)
+.combine(reference)
+.set { forExamplarBuilding }
+
+<span class="org-type">process</span> <span class="org-variable-name">buildExemplars</span> {
+  tag { age }
+
+  <span class="org-constant">input</span>:
+  <span class="org-type">set</span> <span class="org-variable-name">age</span>, <span class="org-string">'passed_outinner_sequence.fasta'</span>, <span class="org-string">'CRL_Step3_Passed_Elements.fasta'</span>, <span class="org-string">'seqfile.result'</span>, <span class="org-string">'genome.fasta'</span> from forExamplarBuilding
+
+  output:
+  set age, <span class="org-string">'LTR.lib'</span> into exemplars
+
+  <span class="org-string">"""</span>
+<span class="org-string">CRL_Step4.pl \</span>
+<span class="org-string"> --step3 CRL_Step3_Passed_Elements.fasta \</span>
+<span class="org-string"> --resultfile seqfile.result \</span>
+<span class="org-string"> --innerfile passed_outinner_sequence.fasta \</span>
+<span class="org-string"> --sequencefile genome.fasta</span>
+
+<span class="org-string">for lib in lLTRs_Seq_For_BLAST.fasta Inner_Seq_For_BLAST.fasta; do</span>
+<span class="org-string">  makeblastdb -in \$lib -dbtype nucl</span>
+<span class="org-string">  blastn \</span>
+<span class="org-string">   -query \${lib} \</span>
+<span class="org-string">   -db \${lib} \</span>
+<span class="org-string">   -evalue 1e-10 \</span>
+<span class="org-string">   -num_descriptions 1000 \</span>
+<span class="org-string">   -out \${lib}.out</span>
+<span class="org-string">done</span>
+
+<span class="org-string">CRL_Step5.pl \</span>
+<span class="org-string"> --LTR_blast lLTRs_Seq_For_BLAST.fasta.out \</span>
+<span class="org-string"> --inner_blast Inner_Seq_For_BLAST.fasta.out \</span>
+<span class="org-string"> --step3 CRL_Step3_Passed_Elements.fasta \</span>
+<span class="org-string"> --final LTR.lib \</span>
+<span class="org-string"> --pcoverage 90 \</span>
+<span class="org-string"> --pidentity 80</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+
+<p>
+Since the set of older LTR elements contain elements from the
+newer LTR set, the examplar sequences need to be masked by
+LTR99.lib and all elements that are significantly masked (cutoff
+at 80% identity in 90% of the element length) are excluded.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy">newLTRs = Channel.create()
+oldLTRs = Channel.create()
+
+exemplars
+.route( <span class="org-keyword">new</span>: newLTRs, old: oldLTRs) { it[0] }
+
+<span class="org-type">process</span> <span class="org-variable-name">removeDuplicates</span> {
+  container <span class="org-string">'robsyme/repeatmasker-onbuild'</span>
+
+  input:
+  set _, <span class="org-string">'ltrs.new.fasta'</span> from newLTRs
+  set _, <span class="org-string">'ltrs.old.fasta'</span> from oldLTRs
+
+  output:
+  set <span class="org-string">'ltrs.old.fasta.masked'</span>, <span class="org-string">'ltrs.new.fasta'</span> into bothLTRforMasking
+
+  <span class="org-string">"""</span>
+<span class="org-string">RepeatMasker -lib ltrs.new.fasta -dir . ltrs.old.fasta</span>
+<span class="org-string">  """</span>
+}
+
+<span class="org-type">process</span> <span class="org-variable-name">filterOldLTRs</span> {
+  <span class="org-constant">input</span>:
+  set <span class="org-string">'ltrs.old.fasta.masked'</span>, <span class="org-string">'ltrs.new.fasta'</span> from bothLTRforMasking
+
+  output:
+  file <span class="org-string">'allLTRs.fasta'</span> into allLTR
+
+  <span class="org-string">"""</span>
+<span class="org-string">remove_masked_sequence.pl \</span>
+<span class="org-string"> --masked_elements ltrs.old.fasta.masked \</span>
+<span class="org-string"> --outfile ltrs.old.final.fasta</span>
+<span class="org-string">cat ltrs.new.fasta ltrs.old.final.fasta &gt; allLTRs.fasta</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-groovy">allLTR
+.splitFasta(record: [id: <span class="org-constant">true</span>, sequence: <span class="org-constant">true</span> ])
+.collectFile( name: <span class="org-string">'allLTRs.fasta'</span> ) { <span class="org-string">"&gt;"</span> + it.id + <span class="org-string">"#LTR\n"</span> + it.sequence }
+.tap { allLTR2 }
+.combine(mitelib2)
+.combine(reference)
+.set { inputForRM2 }
+
+<span class="org-type">process</span> <span class="org-variable-name">RepeatMasker2</span> {
+  container <span class="org-string">'robsyme/repeatmasker-onbuild'</span>
+  cpus 10
+
+  input:
+  set <span class="org-string">'allLTR.lib'</span>, <span class="org-string">'MITE.lib'</span>, <span class="org-string">'genome.fasta'</span> from inputForRM2
+
+  output:
+  file <span class="org-string">'genome.fasta.masked'</span> into genomeLtrMiteMasked
+
+  <span class="org-string">"""</span>
+<span class="org-string">cat allLTR.lib MITE.lib &gt; allMITE_LTR.lib</span>
+
+<span class="org-string">RepeatMasker \</span>
+<span class="org-string"> -no_is \</span>
+<span class="org-string"> -nolow \</span>
+<span class="org-string"> -pa ${task.cpus} \</span>
+<span class="org-string"> -lib allMITE_LTR.lib \</span>
+<span class="org-string"> -dir . \</span>
+<span class="org-string"> genome.fasta</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">RepeatModeler</span> {
+  container <span class="org-string">'repeats'</span>
+  cpus 4
+
+  input:
+  file <span class="org-string">'genome.masked'</span> from genomeLtrMiteMasked
+
+  output:
+  file <span class="org-string">'consensi.fa.classified'</span> into rmOutput
+
+  <span class="org-string">"""</span>
+<span class="org-string">rmaskedpart.pl genome.masked 50 &gt; umseqfile</span>
+<span class="org-string">BuildDatabase -name umseqfiledb -engine ncbi umseqfile</span>
+<span class="org-string">RepeatModeler -pa ${task.cpus} -database umseqfiledb &gt;&amp; umseqfile.out</span>
+<span class="org-string">mv RM*/consensi.fa.classified consensi.fa.classified</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-groovy">identityUnknown = Channel.create()
+identityKnown = Channel.create()
+
+rmOutput
+.splitFasta(record: [id: <span class="org-constant">true</span>, text: <span class="org-constant">true</span>])
+.choice(identityUnknown, identityKnown) { record -&gt; record.id =~ /#Unknown/ ? 0 : 1 }
+
+repeatmaskerUnknowns = identityUnknown.collectFile() { record -&gt; [<span class="org-string">'unknown.fasta'</span>, record.text] }
+repeatmaskerKnowns = identityKnown.collectFile() { record -&gt; [<span class="org-string">'known.fasta'</span>, record.text] }
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">transposonBlast</span> {
+  <span class="org-constant">input</span>:
+  file <span class="org-string">'transposases.fasta'</span> from trnaprot
+  file <span class="org-string">'repeatmodeler_unknowns.fasta'</span> from repeatmaskerUnknowns
+
+  output:
+  file <span class="org-string">'identified_elements.txt'</span> into identifiedTransposons
+  file <span class="org-string">'unknown_elements.txt'</span> into unknownElements
+
+  <span class="org-string">"""</span>
+<span class="org-string">makeblastdb \</span>
+<span class="org-string"> -in transposases.fasta \</span>
+<span class="org-string"> -dbtype prot</span>
+<span class="org-string">blastx \</span>
+<span class="org-string"> -query repeatmodeler_unknowns.fasta \</span>
+<span class="org-string"> -db transposases.fasta \</span>
+<span class="org-string"> -evalue 1e-10 \</span>
+<span class="org-string"> -num_descriptions 10 \</span>
+<span class="org-string"> -out modelerunknown_blast_results.txt</span>
+<span class="org-string">transposon_blast_parse.pl \</span>
+<span class="org-string"> --blastx modelerunknown_blast_results.txt \</span>
+<span class="org-string"> --modelerunknown repeatmodeler_unknowns.fasta</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org6bf8c31" class="outline-3">
+<h3 id="org6bf8c31"><span class="section-number-3">2.8</span> Final Masking</h3>
+<div class="outline-text-3" id="text-2-8">
+<div class="org-src-container">
+<pre class="src src-groovy">repeatmaskerKnowns
+.mix(identifiedTransposons)
+.collectFile() { it.text }
+.combine(mitelib3)
+.combine(allLTR2)
+.set { knownRepeats }
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">repeatMaskerKnowns</span> {
+  publishDir <span class="org-string">"${params.outdir}/${params.strain}/repeatMaskerKnowns"</span>, mode: <span class="org-string">'copy'</span>
+  container <span class="org-string">'robsyme/repeatmasker-onbuild'</span>
+
+  input:
+  file <span class="org-string">'reference.fasta'</span> from reference
+  set <span class="org-string">'knownTransposons.lib'</span>, <span class="org-string">'MITE.lib'</span>, <span class="org-string">'allLTRs.lib'</span> from knownRepeats
+
+  output:
+  set <span class="org-string">'reference.fasta.out'</span>, <span class="org-string">'reference.fasta.masked'</span> into repeatMaskerKnownsMasked
+  file <span class="org-string">'reference.fasta.out.gff'</span>
+
+  <span class="org-string">"""</span>
+<span class="org-string">cat *.lib &gt; knownRepeats.fasta</span>
+<span class="org-string">RepeatMasker \</span>
+<span class="org-string"> -lib knownRepeats.fasta \</span>
+<span class="org-string"> -nolow \</span>
+<span class="org-string"> -no_is \</span>
+<span class="org-string"> -dir . \</span>
+<span class="org-string"> -gff \</span>
+<span class="org-string"> -s \</span>
+<span class="org-string"> reference.fasta</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">octfta</span> {
+  <span class="org-constant">input</span>:
+  file <span class="org-string">'reference.fa'</span> from reference
+  set <span class="org-string">'rm.out'</span>, <span class="org-string">'rm.masked'</span> from repeatMaskerKnownsMasked
+
+  output:
+  file <span class="org-string">'summary.tsv'</span> into repeatmaskerSummaryTable
+
+  <span class="org-string">"""</span>
+<span class="org-string">build_dictionary.pl --rm rm.out &gt; ltr.dict</span>
+<span class="org-string">one_code_to_find_them_all.pl --rm rm.out --ltr ltr.dict --fasta reference.fa</span>
+<span class="org-string">echo -e 'Family\\tElement Length\\tFragments\\tCopies\\tSolo_LTR\\tTotal_Bp\\tCover\\tchrname' &gt; summary.tsv</span>
+<span class="org-string">for file in *.copynumber.csv; do</span>
+<span class="org-string">  chrname=`echo \$file | sed -e 's/^rm\\.out_//' -e 's/.copynumber.csv\$//'`</span>
+<span class="org-string">  awk -v chrname=\$chrname 'BEGIN{OFS="</span>\\t<span class="org-warning">"</span><span class="org-string">} NR&gt;1 &amp;&amp; /^[^#]/ {print(\$0, chrname)}' \$file</span>
+<span class="org-string">done &gt;&gt; summary.tsv</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org864c0eb" class="outline-3">
+<h3 id="org864c0eb"><span class="section-number-3">2.9</span> Summary tables and figures</h3>
+<div class="outline-text-3" id="text-2-9">
+<div class="org-src-container">
+<pre class="src src-groovy"><span class="org-type">process</span> <span class="org-variable-name">summarise</span> {
+  publishDir <span class="org-string">"${params.outdir}/${params.strain}/summarise"</span>, mode: <span class="org-string">'copy'</span>
+
+  input:
+  file <span class="org-string">'summary.tsv'</span> from repeatmaskerSummaryTable
+
+  output:
+  set <span class="org-string">'summary.bycontig.tidy.tsv'</span>, <span class="org-string">'summary.tidy.tsv'</span> into finalSummary
+
+  <span class="org-string">"""</span>
+<span class="org-string">#!/usr/bin/env Rscript</span>
+<span class="org-string">library(ggplot2)</span>
+<span class="org-string">library(dplyr)</span>
+<span class="org-string">library(tidyr)</span>
+<span class="org-string">library(magrittr)</span>
+
+<span class="org-string">data &lt;- read.table('summary.tsv', header=TRUE) %&gt;%</span>
+<span class="org-string">        separate(Family, into=c("</span>Family<span class="org-string">", "</span>Subfamily<span class="org-string">"), sep="</span>/<span class="org-warning">"</span><span class="org-string">) %&gt;%</span>
+<span class="org-string">        group_by(chrname, Family, Subfamily) %&gt;%</span>
+<span class="org-string">        summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %&gt;%</span>
+<span class="org-string">        unite("</span>Family<span class="org-string">", Family, Subfamily, sep="</span>/<span class="org-warning">"</span><span class="org-string">)</span>
+
+<span class="org-string">write.table(data, file='summary.bycontig.tidy.tsv')</span>
+
+<span class="org-string">data &lt;- read.table('summary.tsv', header=TRUE) %&gt;%</span>
+<span class="org-string">        separate(Family, into=c("</span>Family<span class="org-string">", "</span>Subfamily<span class="org-string">"), sep="</span>/<span class="org-warning">"</span><span class="org-string">) %&gt;%</span>
+<span class="org-string">        group_by(Family, Subfamily) %&gt;%</span>
+<span class="org-string">        summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %&gt;%</span>
+<span class="org-string">        unite("</span>Family<span class="org-string">", Family, Subfamily, sep="</span>/<span class="org-warning">"</span><span class="org-string">)</span>
+
+<span class="org-string">write.table(data, file='summary.tidy.tsv')</span>
+<span class="org-string">  """</span>
+}
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Robert Syme</p>
+<p class="date">Created: 2017-08-10 Thu 11:29</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

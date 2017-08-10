@@ -1,0 +1,711 @@
+#+TITLE: Repeat Masking Pipeline
+#+HTML_HEAD: <link href="./theme.css" rel="stylesheet">
+
+* Installing
+
+  Ideally, the only prerequisites would be [[https://www.nextflow.io/][Nextflow]] and
+  [[https://www.docker.com/][Docker]]. Unfortunately, it's almost impossible to do work on repeats
+  without the RepBase library which carries licence restrictions so
+  I'm unable to include the library in the Docker image.
+
+  To build your own image that /does/ include the RepBase libraries,
+  simply run:
+
+  #+BEGIN_SRC sh
+    cd `mktemp -d`
+
+    # Download the RepBase repeat library (replace RB_USERNAME and RB_PASSWORD with your username and password)
+    wget --user $RB_USERNAME \
+  	     --password $RB_PASSWORD \
+  		 --output-document repeatmaskerlibraries.tar.gz \
+		 http://www.girinst.org/server/RepBase/protected/repeatmaskerlibraries/repeatmaskerlibraries-20140131.tar.gz
+
+    # Rename the tar.gz archive to 'repeatmaskerlibraries.tar.gz'
+    mv repeatmaskerlibraries-20140131.tar.gz repeatmaskerlibraries.tar.gz
+
+    # Make an (almost) empty Dockerfile.
+    #  All of the important instructions are in the repeatmasker-onbuild image
+    #  You can view them here: https://github.com/robsyme/nextflow-annotate/blob/master/Dockerfiles/RepeatMasker-onbuild/Dockerfile
+    echo "FROM robsyme/nf-repeatmasking-onbuild" > Dockerfile
+
+    # Build a new docker images called 'repeats'. 
+    #  When building, this image looks for a file called 'repeatmaskerlibraries.tar.gz' which it pulls into the image.
+    docker build -t nf-repeatmasking .
+  #+END_SRC
+  
+* Walkthrough
+** Introduction
+   This is a [[https://en.wikipedia.org/wiki/Literate_programming][literate-programming]] style walk through the pipeline,
+   explaining the utility of every section. Each code block below gets
+   tangled to compose the  pipline, which is written out to [[file:../main.nf][=main.nf=]].
+** Parameter Setup
+
+   There is some necessary setup and housekeeping to begin. This is
+   where we set up our strain name, the path to our reference sequence
+   and the output location for our final figures and tables.
+   
+   #+BEGIN_SRC groovy :tangle ../main.nf :shebang #!/usr/bin/env nextflow
+     params.strain = 'example'
+     params.reference = "data/${params.strain}/*.fasta"
+     params.trnanuc = 'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'
+     params.trnaprot = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
+     params.outdir = 'output'
+
+     trnanuc = file(params.trnanuc)
+     trnaprot = file(params.trnaprot)
+     reference = file(params.reference)
+   #+END_SRC
+
+** MITEs
+
+	MITEs are collected using MITE-Hunter with all default parameters.
+
+	#+BEGIN_SRC groovy :tangle ../main.nf
+      process mitehunter {
+    	cpus 10
+
+    	input:
+    	file 'genome.fasta' from reference
+
+    	output:
+    	file 'MITE.lib' into mitelib
+
+    	"""
+      MITE_Hunter_manager.pl -i genome.fasta -n ${task.cpus} -S 12345678
+      cat *Step8*.fa > MITE.lib
+    	"""
+      }
+	#+END_SRC
+
+	We have a channel =mitelib= that contains our putative MITE
+	sequences. Their fasta ids are not named according to the
+	RepeatMasker convention, so to have them recognised correctly, we
+	add '=#MITE=' to the end of each fasta id. The resulting channel
+	is also duplicated as we use the renamed fasta file at a number of
+	later stages:
+
+	#+BEGIN_SRC groovy :tangle ../main.nf
+	  mitelib
+	  .splitFasta(record: [id: true, sequence: true ])
+	  .collectFile( name: 'MITE.lib' ) { ">" + it.id + "#MITE\n" + it.sequence }
+	  .tap { mitelib1 }
+	  .tap { mitelib2 }
+	  .set { mitelib3 }
+	#+END_SRC
+	
+** Collection of relatively recent LTR retrotranposons
+
+	The rationale for initial collection of recent LTR elements is
+	that these elements contain less nested insertions and mutations
+	as well as recombination, thus the chance for false positives is
+	relatively low. We use the ltrharvest command from [[http://genometools.org][genometools]] to
+	collect potential LTR sequences with the following
+	characteristics:
+
+	- Two terminal repeats which are >= 99% similar, ranging from 100 bp tp 6000 bp
+	- The two terminal repeats end with “TG…CA”
+	- The size of entire element ranges from 1.5 kb to 25 kb
+	- The element must be flanked by a 5bp TSD (target site duplication)
+	- The TSD is within 10 bp from the end of the element
+
+	The results are then passed through =ltrdigest= (again, from
+	genometools) to retain only those elements with polypurine tract
+	(PPT) and primer binding site (PBS).
+
+	The =CRL_Step1= script ensures that at least 50% of the PPT or PBS
+	sequences are located in the internal regions and the distance
+	between LTR and PPT or PBS are no more than 20 bp.
+
+	The =CRL_Step2= script filters again. False positives due to gene
+	clusters may still linger in the output from =CRL_Step1=. These
+	instances will have alignable regions that extend past the LTR
+	boundary. We pull out the flanking sequence from the putative LTR,
+	and if the flanking sequence /also/ aligns, we discard it.
+
+	#+BEGIN_SRC groovy :tangle ../main.nf
+      process recentLTRs {
+        input:
+     	file 'genome.fasta' from reference
+     	file 'eukaryotic-tRNAs.fasta.gz' from trnanuc
+
+     	output:
+		set age, 'seqfile.result' into ltrHarvestNew
+		set age, 'seqfile.outinner' into ltrInnerSeqNew
+     	set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' into recentLTRs
+
+		script:
+		age = 'new'
+     	"""
+      gt suffixerator -db genome.fasta -indexname genome.fasta -tis -suf -lcp -des -ssp -dna
+
+      gt ltrharvest \
+       -index genome.fasta \
+       -out seqfile.out \
+       -outinner seqfile.outinner \
+       -gff3 seqfile.gff \
+       -minlenltr 100 \
+       -maxlenltr 6000 \
+       -mindistltr 1500 \
+       -maxdistltr 25000 \
+       -mintsd 5 \
+       -maxtsd 5 \
+       -motif tgca \
+       -similar 99 \
+       -vic 10 \
+      > seqfile.result
+
+      gt gff3 \
+       -sort seqfile.gff \
+      > seqfile.gff.sort
+
+	  zcat eukaryotic-tRNAs.fasta.gz > eukaryotic-tRNAs.fasta
+
+      gt ltrdigest \
+       -trnas eukaryotic-tRNAs.fasta \
+       seqfile.gff.sort \
+       genome.fasta \
+      > seqfile.gff.dgt
+
+      CRL_Step1.pl \
+       --gff seqfile.gff.dgt
+
+      CRL_Step2.pl \
+       --step1 CRL_Step1_Passed_Elements.txt \
+       --repeatfile seqfile.out \
+       --resultfile seqfile.result \
+       --sequencefile genome.fasta \
+       --removed_repeats CRL_Step2_Passed_Elements.fasta
+     	"""
+      }
+	#+END_SRC
+
+** Collection of relatively old LTR retrotransposons
+
+	Collection of relatively old LTRs is enabled by reducing the
+	similarity between LTRs to 85% (default value of LTRharvest) and
+	not associated with terminal sequence motif (but the process is
+	otherwise identical to =recentLTRs=).
+
+	#+BEGIN_SRC groovy :tangle ../main.nf
+      process olderLTRs {
+    	input:
+    	file 'genome.fasta' from reference
+    	file 'eukaryotic-tRNAs.fasta.gz' from trnanuc
+
+    	output:
+    	set age, 'seqfile.result' into ltrHarvestOld
+		set age, 'seqfile.outinner' into ltrInnerSeqOld
+    	set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_*.fasta' into olderLTRs
+
+		script:
+		age = 'old'
+    	"""
+      gt suffixerator -db genome.fasta -indexname genome.fasta -tis -suf -lcp -des -ssp -dna
+
+      gt ltrharvest \
+	   -index genome.fasta \
+	   -out seqfile.out \
+	   -outinner seqfile.outinner \
+	   -gff3 seqfile.gff \
+	   -minlenltr 100 \
+	   -maxlenltr 6000 \
+	   -mindistltr 1500 \
+	   -maxdistltr 25000 \
+	   -mintsd 5 \
+	   -maxtsd 5 \
+	   -vic 10 \
+      > seqfile.result
+
+      gt gff3 \
+	   -sort seqfile.gff \
+      > seqfile.gff.sort
+
+	  zcat eukaryotic-tRNAs.fasta.gz > eukaryotic-tRNAs.fasta
+
+      gt ltrdigest \
+	   -trnas eukaryotic-tRNAs.fasta \
+	   seqfile.gff.sort \
+	   genome.fasta \
+      > seqfile.gff.dgt
+
+      CRL_Step1.pl \
+	   --gff seqfile.gff.dgt
+
+      CRL_Step2.pl \
+	   --step1 CRL_Step1_Passed_Elements.txt \
+	   --repeatfile seqfile.out \
+	   --resultfile seqfile.result \
+	   --sequencefile genome.fasta \
+	   --removed_repeats CRL_Step2_Passed_Elements.fasta
+    	"""
+      }
+	#+END_SRC
+
+** Cleaning LTR results
+
+	LTRs (both new and old) identified above will almost certainly
+	include false positives that need to be removed. The most common
+	errors are:
+
+	- Tandem local repeats (such as centromeric repeats)
+	- Local gene clusters derived from gene duplications
+
+	In the case of genuine LTRs, the insertion site will differ
+	between LTR instances. The result is that alignment between two
+	instances will not extend past the borders of the terminal repeat
+	regions. In false positive instances like the examples above, the
+	alignability of the instances may extend past the terminal
+	repeats. :TODO: Present dot-plot examples of true and false LTRs.
+
+	The outupt of this process (=CRL_Step3_Passed_Elements.fasta=) is
+	a FASTA file containing element sequences that have passed the
+	percent identity (60%) and number of identical nucleotides
+	thresholds.
+
+	#+BEGIN_SRC groovy :tangle ../main.nf
+
+	  ltrHarvestNew
+	  .tap { ltrHarvestResultsNew }
+	  .set { ltrHarvestResultsForExamplarNew }
+
+	  ltrInnerSeqNew
+	  .tap { ltrHarvestInnerNew }
+	  .set { outinnerForBlastXNew }
+
+	  ltrHarvestOld
+	  .tap { ltrHarvestResultsOld }
+	  .set { ltrHarvestResultsForExamplarOld }
+
+	  ltrInnerSeqOld
+	  .tap { ltrHarvestInnerOld }
+	  .set { outinnerForBlastXOld }
+
+      ltrs = recentLTRs.mix(olderLTRs)
+	  ltrHarvestResults = ltrHarvestResultsOld.mix(ltrHarvestResultsNew)
+	  ltrHarvestInner = ltrHarvestInnerOld.mix(ltrHarvestInnerNew)
+	  outinnerForBlastX = outinnerForBlastXOld.mix(outinnerForBlastXNew)
+	  ltrHarvestResultsForExamplar = ltrHarvestResultsForExamplarOld.mix(ltrHarvestResultsForExamplarNew)
+	#+END_SRC
+
+	#+BEGIN_SRC groovy :tangle ../main.nf
+      process CRL_Step3 {
+	    tag { age }
+		input:
+		set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' from ltrs
+
+		output:
+		set age, 'CRL_Step3_Passed_Elements.fasta' into step3Passed
+		set age, 'CRL_Step3_Passed_Elements.fasta' into step3PassedForExamplars
+
+		"""
+      CRL_Step3.pl \
+       --directory . \
+       --step2 CRL_Step2_Passed_Elements.fasta \
+       --pidentity 60 \
+       --seq_c 25
+        """
+      }
+	#+END_SRC
+
+	Retrotranposons are frequently nested with each other or inserted
+	by other elements. If left unidentified, it will cause
+	misclassification and other complications. To detect those
+	elements, LTR sequences from candidate elements retained after
+	steps in 2.1.3 are used to mask the putative internal regions. If
+	LTR sequences are detected in the internal regions, it is
+	considered as elements nested with other insertions.
+
+	If internal regions of elements match sequences in MITE.lib (see
+	1.), they are also considered as elements with nested
+	insertions.
+
+	The internal regions of elements are also used to search against
+	a transposase database of DNA transposons. If the internal
+	sequence has significant matches with any DNA transposase, it is
+	considered as an element containing nested insertions.
+
+	This process produces =lLTR_Only.lib=, a FASTA file containing
+	the sequence of the left (5'end) LTR sequence.
+
+	#+BEGIN_SRC groovy :tangle ../main.nf
+      ltrHarvestResults
+      .combine(step3Passed, by: 0)
+      .combine(mitelib1)
+      .combine(reference)
+      .set { nestedInput }
+
+      process identifyNestedInsetions {
+    	tag { age }
+    	input:
+    	set age, 'seqfile.result', 'CRL_Step3_Passed_Elements.fasta', 'MITE.lib', 'genome.fasta' from nestedInput
+
+    	output:
+    	set age, 'repeats_to_mask_LTR.fasta' into repeatsToMaskLTR
+
+    	"""
+      ltr_library.pl \
+       --resultfile seqfile.result \
+       --step3 CRL_Step3_Passed_Elements.fasta \
+       --sequencefile genome.fasta
+      cat MITE.lib lLTR_Only.lib \
+      | awk 'BEGIN {RS = ">" ; FS = "\\n" ; ORS = ""} \$2 {print ">"\$0}' \
+      > repeats_to_mask_LTR.fasta
+    	"""
+      }
+	#+END_SRC
+
+** Identify elements with nested insertions
+
+   Retrotranposons are frequently nested with each other or inserted
+   by other elements. If left unidentified, it will cause
+   misclassification and other complications. To detect those
+   elements, LTR sequences from candidate elements retained after
+   steps in == are used to mask the putative internal regions. If
+   LTR sequences are detected in the internal regions, it is
+   considered as elements nested with other insertions.
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     process RepeatMasker1 {
+       container 'robsyme/repeatmasker-onbuild'
+       tag { age }
+
+       input:
+       set age, 'repeats_to_mask_LTR.fasta', 'seqfile.outinner' from repeatsToMaskLTR.combine(ltrHarvestInner, by: 0)
+
+       output:
+       set age, 'seqfile.outinner.out', 'seqfile.outinner.masked' into repeatMasker1Unclean
+
+       """
+     RepeatMasker \
+      -lib repeats_to_mask_LTR.fasta \
+      -nolow \
+      -no_is \
+      -dir . \
+      seqfile.outinner
+       """
+     }
+   #+END_SRC
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     process cleanRM {
+	   tag { age }
+
+       input:
+       set age, 'seqfile.outinner.out', 'seqfile.outinner.masked' from repeatMasker1Unclean
+
+       output:
+       set age, 'seqfile.outinner.clean' into repeatMasker1Clean
+
+       """
+     cleanRM.pl seqfile.outinner.out seqfile.outinner.masked > seqfile.outinner.unmasked
+     rmshortinner.pl seqfile.outinner.unmasked 50 > seqfile.outinner.clean
+       """
+     }
+   #+END_SRC
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+   process blastX {
+	   tag { age }
+
+       input:
+	   file 'Tpases020812DNA.fasta' from trnaprot
+       set age, 'seqfile.outinner.clean', 'seqfile.outinner' from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
+
+       output:
+       set age, 'passed_outinner_sequence.fasta' into blastxPassed
+
+       """
+     makeblastdb -in Tpases020812DNA.fasta -dbtype prot
+     blastx \
+      -query seqfile.outinner.clean \
+      -db Tpases020812DNA.fasta \
+      -evalue 1e-10 \
+      -num_descriptions 10 \
+      -out seqfile.outinner.clean_blastx.out.txt
+
+     outinner_blastx_parse.pl \
+      --blastx seqfile.outinner.clean_blastx.out.txt \
+      --outinner seqfile.outinner
+
+	 if [ ! -s passed_outinner_sequence.fasta ]; then
+	   echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
+	 fi
+       """
+     }
+   #+END_SRC
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     blastxPassed
+     .combine(step3PassedForExamplars, by: 0)
+     .combine(ltrHarvestResultsForExamplar, by: 0)
+     .combine(reference)
+     .set { forExamplarBuilding }
+
+     process buildExemplars {
+       tag { age }
+
+       input:
+       set age, 'passed_outinner_sequence.fasta', 'CRL_Step3_Passed_Elements.fasta', 'seqfile.result', 'genome.fasta' from forExamplarBuilding
+
+       output:
+       set age, 'LTR.lib' into exemplars
+
+       """
+     CRL_Step4.pl \
+      --step3 CRL_Step3_Passed_Elements.fasta \
+      --resultfile seqfile.result \
+      --innerfile passed_outinner_sequence.fasta \
+      --sequencefile genome.fasta
+
+     for lib in lLTRs_Seq_For_BLAST.fasta Inner_Seq_For_BLAST.fasta; do
+       makeblastdb -in \$lib -dbtype nucl
+       blastn \
+    	-query \${lib} \
+    	-db \${lib} \
+    	-evalue 1e-10 \
+    	-num_descriptions 1000 \
+    	-out \${lib}.out
+     done
+
+     CRL_Step5.pl \
+      --LTR_blast lLTRs_Seq_For_BLAST.fasta.out \
+      --inner_blast Inner_Seq_For_BLAST.fasta.out \
+      --step3 CRL_Step3_Passed_Elements.fasta \
+      --final LTR.lib \
+      --pcoverage 90 \
+      --pidentity 80
+       """
+     }
+   #+END_SRC
+
+   Since the set of older LTR elements contain elements from the
+   newer LTR set, the examplar sequences need to be masked by
+   LTR99.lib and all elements that are significantly masked (cutoff
+   at 80% identity in 90% of the element length) are excluded.
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     newLTRs = Channel.create()
+     oldLTRs = Channel.create()
+
+     exemplars
+	 .route( new: newLTRs, old: oldLTRs) { it[0] }
+
+     process removeDuplicates {
+       container 'robsyme/repeatmasker-onbuild'
+
+       input:
+       set _, 'ltrs.new.fasta' from newLTRs
+       set _, 'ltrs.old.fasta' from oldLTRs
+
+       output:
+       set 'ltrs.old.fasta.masked', 'ltrs.new.fasta' into bothLTRforMasking
+
+       """
+     RepeatMasker -lib ltrs.new.fasta -dir . ltrs.old.fasta
+       """
+     }
+
+	 process filterOldLTRs {
+	   input:
+       set 'ltrs.old.fasta.masked', 'ltrs.new.fasta' from bothLTRforMasking
+
+	   output:
+	   file 'allLTRs.fasta' into allLTR
+
+	   """
+     remove_masked_sequence.pl \
+      --masked_elements ltrs.old.fasta.masked \
+      --outfile ltrs.old.final.fasta
+     cat ltrs.new.fasta ltrs.old.final.fasta > allLTRs.fasta
+	   """
+	 }
+   #+END_SRC
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     allLTR
+	 .splitFasta(record: [id: true, sequence: true ])
+	 .collectFile( name: 'allLTRs.fasta' ) { ">" + it.id + "#LTR\n" + it.sequence }
+	 .tap { allLTR2 }
+     .combine(mitelib2)
+     .combine(reference)
+     .set { inputForRM2 }
+
+     process RepeatMasker2 {
+       container 'robsyme/repeatmasker-onbuild'
+	   cpus 10
+
+       input:
+       set 'allLTR.lib', 'MITE.lib', 'genome.fasta' from inputForRM2
+
+       output:
+       file 'genome.fasta.masked' into genomeLtrMiteMasked
+
+       """
+     cat allLTR.lib MITE.lib > allMITE_LTR.lib
+
+     RepeatMasker \
+	  -no_is \
+	  -nolow \
+	  -pa ${task.cpus} \
+      -lib allMITE_LTR.lib \
+      -dir . \
+      genome.fasta
+       """
+     }
+   #+END_SRC
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     process RepeatModeler {
+       container 'repeats'
+	   cpus 4
+
+       input:
+       file 'genome.masked' from genomeLtrMiteMasked
+
+       output:
+	   file 'consensi.fa.classified' into rmOutput
+
+       """
+     rmaskedpart.pl genome.masked 50 > umseqfile
+     BuildDatabase -name umseqfiledb -engine ncbi umseqfile
+     RepeatModeler -pa ${task.cpus} -database umseqfiledb >& umseqfile.out
+     mv RM*/consensi.fa.classified consensi.fa.classified
+       """
+     }
+   #+END_SRC
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     identityUnknown = Channel.create()
+     identityKnown = Channel.create()
+
+     rmOutput
+     .splitFasta(record: [id: true, text: true])
+     .choice(identityUnknown, identityKnown) { record -> record.id =~ /#Unknown/ ? 0 : 1 }
+
+     repeatmaskerUnknowns = identityUnknown.collectFile() { record -> ['unknown.fasta', record.text] }
+     repeatmaskerKnowns = identityKnown.collectFile() { record -> ['known.fasta', record.text] }
+   #+END_SRC
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     process transposonBlast {
+       input:
+	   file 'transposases.fasta' from trnaprot
+       file 'repeatmodeler_unknowns.fasta' from repeatmaskerUnknowns
+
+       output:
+       file 'identified_elements.txt' into identifiedTransposons
+       file 'unknown_elements.txt' into unknownElements
+
+       """
+     makeblastdb \
+      -in transposases.fasta \
+      -dbtype prot
+     blastx \
+      -query repeatmodeler_unknowns.fasta \
+      -db transposases.fasta \
+      -evalue 1e-10 \
+      -num_descriptions 10 \
+      -out modelerunknown_blast_results.txt
+     transposon_blast_parse.pl \
+      --blastx modelerunknown_blast_results.txt \
+      --modelerunknown repeatmodeler_unknowns.fasta
+       """
+     }
+   #+END_SRC
+
+** Final Masking
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+	 repeatmaskerKnowns
+	 .mix(identifiedTransposons)
+	 .collectFile() { it.text }
+     .combine(mitelib3)
+     .combine(allLTR2)
+	 .set { knownRepeats }
+   #+END_SRC
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     process repeatMaskerKnowns {
+	   publishDir "${params.outdir}/${params.strain}/repeatMaskerKnowns", mode: 'copy'
+       container 'robsyme/repeatmasker-onbuild'
+
+       input:
+       file 'reference.fasta' from reference
+       set 'knownTransposons.lib', 'MITE.lib', 'allLTRs.lib' from knownRepeats
+
+       output:
+       set 'reference.fasta.out', 'reference.fasta.masked' into repeatMaskerKnownsMasked
+	   file 'reference.fasta.out.gff'
+
+       """
+     cat *.lib > knownRepeats.fasta
+     RepeatMasker \
+      -lib knownRepeats.fasta \
+      -nolow \
+      -no_is \
+      -dir . \
+	  -gff \
+      -s \
+      reference.fasta
+       """
+     }
+   #+END_SRC
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     process octfta {
+       input:
+       file 'reference.fa' from reference
+       set 'rm.out', 'rm.masked' from repeatMaskerKnownsMasked
+
+       output:
+       file 'summary.tsv' into repeatmaskerSummaryTable
+
+       """
+     build_dictionary.pl --rm rm.out > ltr.dict
+     one_code_to_find_them_all.pl --rm rm.out --ltr ltr.dict --fasta reference.fa
+     echo -e 'Family\\tElement Length\\tFragments\\tCopies\\tSolo_LTR\\tTotal_Bp\\tCover\\tchrname' > summary.tsv
+     for file in *.copynumber.csv; do
+       chrname=`echo \$file | sed -e 's/^rm\\.out_//' -e 's/.copynumber.csv\$//'`
+       awk -v chrname=\$chrname 'BEGIN{OFS="\\t"} NR>1 && /^[^#]/ {print(\$0, chrname)}' \$file
+     done >> summary.tsv
+       """
+     }
+   #+END_SRC
+
+** Summary tables and figures
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+     process summarise {
+	   publishDir "${params.outdir}/${params.strain}/summarise", mode: 'copy'
+
+       input:
+       file 'summary.tsv' from repeatmaskerSummaryTable
+
+	   output:
+	   set 'summary.bycontig.tidy.tsv', 'summary.tidy.tsv' into finalSummary
+
+       """
+     #!/usr/bin/env Rscript
+     library(ggplot2)
+     library(dplyr)
+     library(tidyr)
+     library(magrittr)
+
+     data <- read.table('summary.tsv', header=TRUE) %>%
+             separate(Family, into=c("Family", "Subfamily"), sep="/") %>%
+             group_by(chrname, Family, Subfamily) %>%
+             summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %>%
+             unite("Family", Family, Subfamily, sep="/")
+
+     write.table(data, file='summary.bycontig.tidy.tsv')
+
+     data <- read.table('summary.tsv', header=TRUE) %>%
+             separate(Family, into=c("Family", "Subfamily"), sep="/") %>%
+             group_by(Family, Subfamily) %>%
+             summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %>%
+             unite("Family", Family, Subfamily, sep="/")
+
+	 write.table(data, file='summary.tidy.tsv')
+       """
+     }
+   #+END_SRC
