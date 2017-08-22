@@ -57,7 +57,13 @@
 
 ** MITEs
 
-	MITEs are collected using MITE-Hunter with all default parameters.
+	MITEs are collected using MITE-Hunter with all default
+	parameters. This step requires specific versions of perl modules
+	and older version of blastall, so it is run inside its own docker
+	container published here:
+	https://hub.docker.com/r/robsyme/mitehunter/. If you'd prefer to
+	generate your own image, the Dockerfile and associated code is in
+	[[file:/../dockerfiles/mitehunter]].
 
 	#+BEGIN_SRC groovy :tangle ../main.nf
       process mitehunter {
