@@ -9,6 +9,7 @@ trnaprot = file(params.trnaprot)
 reference = file(params.reference)
 
 process mitehunter {
+  container 'robsyme/mitehunter'
   cpus 10
 
   input:
@@ -181,13 +182,13 @@ CRL_Step3.pl \
 ltrHarvestResults
 .combine(step3Passed, by: 0)
 .combine(mitelib1)
-.combine(reference)
 .set { nestedInput }
 
 process identifyNestedInsetions {
   tag { age }
   input:
-  set age, 'seqfile.result', 'CRL_Step3_Passed_Elements.fasta', 'MITE.lib', 'genome.fasta' from nestedInput
+  file 'genome.fasta' from reference
+  set age, 'seqfile.result', 'CRL_Step3_Passed_Elements.fasta', 'MITE.lib' from nestedInput
 
   output:
   set age, 'repeats_to_mask_LTR.fasta' into repeatsToMaskLTR
@@ -270,14 +271,14 @@ echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
 blastxPassed
 .combine(step3PassedForExamplars, by: 0)
 .combine(ltrHarvestResultsForExamplar, by: 0)
-.combine(reference)
 .set { forExamplarBuilding }
 
 process buildExemplars {
   tag { age }
 
   input:
-  set age, 'passed_outinner_sequence.fasta', 'CRL_Step3_Passed_Elements.fasta', 'seqfile.result', 'genome.fasta' from forExamplarBuilding
+  file 'genome.fasta' from reference
+  set age, 'passed_outinner_sequence.fasta', 'CRL_Step3_Passed_Elements.fasta', 'seqfile.result' from forExamplarBuilding
 
   output:
   set age, 'LTR.lib' into exemplars
@@ -350,7 +351,6 @@ allLTR
 .collectFile( name: 'allLTRs.fasta' ) { ">" + it.id + "#LTR\n" + it.sequence }
 .tap { allLTR2 }
 .combine(mitelib2)
-.combine(reference)
 .set { inputForRM2 }
 
 process RepeatMasker2 {
@@ -358,7 +358,8 @@ process RepeatMasker2 {
   cpus 10
 
   input:
-  set 'allLTR.lib', 'MITE.lib', 'genome.fasta' from inputForRM2
+  file 'genome.fasta' from reference
+  set 'allLTR.lib', 'MITE.lib' from inputForRM2
 
   output:
   file 'genome.fasta.masked' into genomeLtrMiteMasked
