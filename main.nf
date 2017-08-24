@@ -8,29 +8,6 @@ trnanuc = file(params.trnanuc)
 trnaprot = file(params.trnaprot)
 reference = file(params.reference)
 
-process mitehunter {
-  container 'robsyme/mitehunter'
-  cpus 10
-
-  input:
-  file 'genome.fasta' from reference
-
-  output:
-  file 'MITE.lib' into mitelib
-
-  """
-MITE_Hunter_manager.pl -i genome.fasta -n ${task.cpus} -S 12345678
-cat *Step8*.fa > MITE.lib
-  """
-}
-
-mitelib
-.splitFasta(record: [id: true, sequence: true ])
-.collectFile( name: 'MITE.lib' ) { ">" + it.id + "#MITE\n" + it.sequence }
-.tap { mitelib1 }
-.tap { mitelib2 }
-.set { mitelib3 }
-
 process recentLTRs {
   input:
   file 'genome.fasta' from reference
@@ -181,14 +158,13 @@ CRL_Step3.pl \
 
 ltrHarvestResults
 .combine(step3Passed, by: 0)
-.combine(mitelib1)
 .set { nestedInput }
 
 process identifyNestedInsetions {
   tag { age }
   input:
   file 'genome.fasta' from reference
-  set age, 'seqfile.result', 'CRL_Step3_Passed_Elements.fasta', 'MITE.lib' from nestedInput
+  set age, 'seqfile.result', 'CRL_Step3_Passed_Elements.fasta' from nestedInput
 
   output:
   set age, 'repeats_to_mask_LTR.fasta' into repeatsToMaskLTR
@@ -198,7 +174,7 @@ ltr_library.pl \
  --resultfile seqfile.result \
  --step3 CRL_Step3_Passed_Elements.fasta \
  --sequencefile genome.fasta
-cat MITE.lib lLTR_Only.lib \
+cat lLTR_Only.lib \
 | awk 'BEGIN {RS = ">" ; FS = "\\n" ; ORS = ""} \$2 {print ">"\$0}' \
 > repeats_to_mask_LTR.fasta
   """
@@ -221,6 +197,12 @@ RepeatMasker \
  -no_is \
  -dir . \
  seqfile.outinner
+
+if [ ! -e seqfile.outinner.masked ]
+then
+  echo "$device0 is a block device."
+fi
+
   """
 }
 
@@ -350,7 +332,6 @@ allLTR
 .splitFasta(record: [id: true, sequence: true ])
 .collectFile( name: 'allLTRs.fasta' ) { ">" + it.id + "#LTR\n" + it.sequence }
 .tap { allLTR2 }
-.combine(mitelib2)
 .set { inputForRM2 }
 
 process RepeatMasker2 {
@@ -359,19 +340,17 @@ process RepeatMasker2 {
 
   input:
   file 'genome.fasta' from reference
-  set 'allLTR.lib', 'MITE.lib' from inputForRM2
+  file 'allLTR.lib' from inputForRM2
 
   output:
-  file 'genome.fasta.masked' into genomeLtrMiteMasked
+  file 'genome.fasta.masked' into genomeLtrMasked
 
   """
-cat allLTR.lib MITE.lib > allMITE_LTR.lib
-
 RepeatMasker \
  -no_is \
  -nolow \
  -pa ${task.cpus} \
- -lib allMITE_LTR.lib \
+ -lib allLTR.lib \
  -dir . \
  genome.fasta
   """
@@ -382,7 +361,7 @@ process RepeatModeler {
   cpus 4
 
   input:
-  file 'genome.masked' from genomeLtrMiteMasked
+  file 'genome.masked' from genomeLtrMasked
 
   output:
   file 'consensi.fa.classified' into rmOutput
@@ -433,7 +412,6 @@ transposon_blast_parse.pl \
 repeatmaskerKnowns
 .mix(identifiedTransposons)
 .collectFile() { it.text }
-.combine(mitelib3)
 .combine(allLTR2)
 .set { knownRepeats }
 
@@ -443,7 +421,7 @@ process repeatMaskerKnowns {
 
   input:
   file 'reference.fasta' from reference
-  set 'knownTransposons.lib', 'MITE.lib', 'allLTRs.lib' from knownRepeats
+  set 'knownTransposons.lib', 'allLTRs.lib' from knownRepeats
 
   output:
   set 'reference.fasta.out', 'reference.fasta.masked' into repeatMaskerKnownsMasked
