@@ -1,11 +1,11 @@
 #!/usr/bin/env nextflow
 params.reference = 'data/example/genome.fasta'
-params.trnaprot = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
+params.trnaprotgz = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
 params.trnanuc = 'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'
 params.outdir = 'output'
 
 trnanuc = file(params.trnanuc)
-trnaprot = file(params.trnaprot)
+trnaprotgz = file(params.trnaprotgz)
 reference = file(params.reference)
 
 process recentLTRs {
@@ -198,11 +198,9 @@ RepeatMasker \
  -dir . \
  seqfile.outinner
 
-if [ ! -e seqfile.outinner.masked ]
-then
-  echo "$device0 is a block device."
+if [ ! -f seqfile.outinner.masked ]; then
+  cp seqfile.outinner seqfile.outinner.masked
 fi
-
   """
 }
 
@@ -225,28 +223,29 @@ process blastX {
    tag { age }
 
    input:
-   file 'Tpases020812DNA.fasta' from trnaprot
+   file 'Tpases020812DNA.fasta.gz' from trnaprotgz
    set age, 'seqfile.outinner.clean', 'seqfile.outinner' from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
 
    output:
    set age, 'passed_outinner_sequence.fasta' into blastxPassed
 
    """
- makeblastdb -in Tpases020812DNA.fasta -dbtype prot
- blastx \
-  -query seqfile.outinner.clean \
-  -db Tpases020812DNA.fasta \
-  -evalue 1e-10 \
-  -num_descriptions 10 \
-  -out seqfile.outinner.clean_blastx.out.txt
+zcat Tpases020812DNA.fasta.gz > Tpases020812DNA.fasta
+makeblastdb -in Tpases020812DNA.fasta -dbtype prot
+blastx \
+ -query seqfile.outinner.clean \
+ -db Tpases020812DNA.fasta \
+ -evalue 1e-10 \
+ -num_descriptions 10 \
+ -out seqfile.outinner.clean_blastx.out.txt
 
- outinner_blastx_parse.pl \
-  --blastx seqfile.outinner.clean_blastx.out.txt \
-  --outinner seqfile.outinner
+outinner_blastx_parse.pl \
+ --blastx seqfile.outinner.clean_blastx.out.txt \
+ --outinner seqfile.outinner
 
- if [ ! -s passed_outinner_sequence.fasta ]; then
-echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
- fi
+if [ ! -s passed_outinner_sequence.fasta ]; then
+  echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
+fi
    """
  }
 
@@ -386,7 +385,7 @@ repeatmaskerKnowns = identityKnown.collectFile() { record -> ['known.fasta', rec
 
 process transposonBlast {
   input:
-  file 'transposases.fasta' from trnaprot
+  file 'transposases.fasta.gz' from trnaprotgz
   file 'repeatmodeler_unknowns.fasta' from repeatmaskerUnknowns
 
   output:
@@ -394,6 +393,7 @@ process transposonBlast {
   file 'unknown_elements.txt' into unknownElements
 
   """
+zcat transposases.fasta.gz > transposases.fasta
 makeblastdb \
  -in transposases.fasta \
  -dbtype prot
