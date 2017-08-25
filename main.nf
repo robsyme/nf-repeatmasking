@@ -12,8 +12,8 @@ reference = file(params.reference)
 
 log.info ""
 log.info "R E P E A T M A S K I N G  ~  version " + VERSION
-log.info "reference input           : ${params.reference}"
-log.info "output directory          : ${params.outdir}"
+log.info "reference input            : ${params.reference}"
+log.info "output directory           : ${params.outdir}"
 log.info ""
 
 process recentLTRs {
