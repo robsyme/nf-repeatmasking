@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2017-08-22 Tue 11:14 -->
+<!-- 2017-08-25 Fri 13:24 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Repeat Masking Pipeline</title>
@@ -234,26 +234,25 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgeccd5ef">1. Installing</a></li>
-<li><a href="#org9849df0">2. Walkthrough</a>
+<li><a href="#org07ce76b">1. Installing</a></li>
+<li><a href="#orgde0dfa9">2. Walkthrough</a>
 <ul>
-<li><a href="#org4e693ce">2.1. Introduction</a></li>
-<li><a href="#org7973d84">2.2. Parameter Setup</a></li>
-<li><a href="#org94ca95b">2.3. MITEs</a></li>
-<li><a href="#orgb25379d">2.4. Collection of relatively recent LTR retrotranposons</a></li>
-<li><a href="#org858e207">2.5. Collection of relatively old LTR retrotransposons</a></li>
-<li><a href="#orgc4fd262">2.6. Cleaning LTR results</a></li>
-<li><a href="#org7e776e1">2.7. Identify elements with nested insertions</a></li>
-<li><a href="#org392e145">2.8. Final Masking</a></li>
-<li><a href="#orgf57a0f3">2.9. Summary tables and figures</a></li>
+<li><a href="#orgffab121">2.1. Introduction</a></li>
+<li><a href="#orgac98c43">2.2. Parameter Setup</a></li>
+<li><a href="#orgc10c82f">2.3. Collection of relatively recent LTR retrotranposons</a></li>
+<li><a href="#org56b7aeb">2.4. Collection of relatively old LTR retrotransposons</a></li>
+<li><a href="#org8405be2">2.5. Cleaning LTR results</a></li>
+<li><a href="#orgc3d2fa4">2.6. Identify elements with nested insertions</a></li>
+<li><a href="#org50c0013">2.7. Final Masking</a></li>
+<li><a href="#orgd932cf6">2.8. Summary tables and figures</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgeccd5ef" class="outline-2">
-<h2 id="orgeccd5ef"><span class="section-number-2">1</span> Installing</h2>
+<div id="outline-container-org07ce76b" class="outline-2">
+<h2 id="org07ce76b"><span class="section-number-2">1</span> Installing</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Ideally, the only prerequisites would be <a href="https://www.nextflow.io/">Nextflow</a> and
@@ -292,11 +291,11 @@ docker build -t nf-repeatmasking .
 </div>
 </div>
 
-<div id="outline-container-org9849df0" class="outline-2">
-<h2 id="org9849df0"><span class="section-number-2">2</span> Walkthrough</h2>
+<div id="outline-container-orgde0dfa9" class="outline-2">
+<h2 id="orgde0dfa9"><span class="section-number-2">2</span> Walkthrough</h2>
 <div class="outline-text-2" id="text-2">
-</div><div id="outline-container-org4e693ce" class="outline-3">
-<h3 id="org4e693ce"><span class="section-number-3">2.1</span> Introduction</h3>
+</div><div id="outline-container-orgffab121" class="outline-3">
+<h3 id="orgffab121"><span class="section-number-3">2.1</span> Introduction</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
 This is a <a href="https://en.wikipedia.org/wiki/Literate_programming">literate-programming</a> style walk through the pipeline,
@@ -305,8 +304,8 @@ tangled to compose the  pipline, which is written out to <a href="../main.nf"><c
 </p>
 </div>
 </div>
-<div id="outline-container-org7973d84" class="outline-3">
-<h3 id="org7973d84"><span class="section-number-3">2.2</span> Parameter Setup</h3>
+<div id="outline-container-orgac98c43" class="outline-3">
+<h3 id="orgac98c43"><span class="section-number-3">2.2</span> Parameter Setup</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 There is some necessary setup and housekeeping to begin. This is
@@ -328,62 +327,9 @@ params.outdir = <span class="org-string">'output'</span>
 </div>
 </div>
 
-<div id="outline-container-org94ca95b" class="outline-3">
-<h3 id="org94ca95b"><span class="section-number-3">2.3</span> MITEs</h3>
+<div id="outline-container-orgc10c82f" class="outline-3">
+<h3 id="orgc10c82f"><span class="section-number-3">2.3</span> Collection of relatively recent LTR retrotranposons</h3>
 <div class="outline-text-3" id="text-2-3">
-<p>
-MITEs are collected using MITE-Hunter with all default
-parameters. This step requires specific versions of perl modules
-and older version of blastall, so it is run inside its own docker
-container published here:
-<a href="https://hub.docker.com/r/robsyme/mitehunter/">https://hub.docker.com/r/robsyme/mitehunter/</a>. If you'd prefer to
-generate your own image, the Dockerfile and associated code is in
-<a href="file:///../dockerfiles/mitehunter">file:///../dockerfiles/mitehunter</a>.
-</p>
-
-<div class="org-src-container">
-<pre class="src src-groovy">process mitehunter {
-  container <span class="org-string">'robsyme/mitehunter'</span>
-  cpus 10
-
-  input:
-  file <span class="org-string">'genome.fasta'</span> from reference
-
-  output:
-  file <span class="org-string">'MITE.lib'</span> into mitelib
-
-  <span class="org-string">"""</span>
-<span class="org-string">MITE_Hunter_manager.pl -i genome.fasta -n </span><span class="org-variable-name">${task.cpus}</span><span class="org-string"> -S 12345678</span>
-<span class="org-string">cat *Step8*.fa &gt; MITE.lib</span>
-<span class="org-string">  """</span>
-}
-</pre>
-</div>
-
-<p>
-We have a channel <code>mitelib</code> that contains our putative MITE
-sequences. Their fasta ids are not named according to the
-RepeatMasker convention, so to have them recognised correctly, we
-add '<code>#MITE</code>' to the end of each fasta id. The resulting channel
-is also duplicated as we use the renamed fasta file at a number of
-later stages:
-</p>
-
-<div class="org-src-container">
-<pre class="src src-groovy">mitelib
-.splitFasta(record: [id: <span class="org-constant">true</span>, sequence: <span class="org-constant">true</span> ])
-.collectFile( name: <span class="org-string">'MITE.lib'</span> ) { <span class="org-string">"&gt;"</span> + <span class="org-variable-name">it</span>.id + <span class="org-string">"#MITE\n"</span> + <span class="org-variable-name">it</span>.sequence }
-.tap { mitelib1 }
-.tap { mitelib2 }
-.set { mitelib3 }
-</pre>
-</div>
-</div>
-</div>
-
-<div id="outline-container-orgb25379d" class="outline-3">
-<h3 id="orgb25379d"><span class="section-number-3">2.4</span> Collection of relatively recent LTR retrotranposons</h3>
-<div class="outline-text-3" id="text-2-4">
 <p>
 The rationale for initial collection of recent LTR elements is
 that these elements contain less nested insertions and mutations
@@ -481,9 +427,9 @@ and if the flanking sequence <i>also</i> aligns, we discard it.
 </div>
 </div>
 
-<div id="outline-container-org858e207" class="outline-3">
-<h3 id="org858e207"><span class="section-number-3">2.5</span> Collection of relatively old LTR retrotransposons</h3>
-<div class="outline-text-3" id="text-2-5">
+<div id="outline-container-org56b7aeb" class="outline-3">
+<h3 id="org56b7aeb"><span class="section-number-3">2.4</span> Collection of relatively old LTR retrotransposons</h3>
+<div class="outline-text-3" id="text-2-4">
 <p>
 Collection of relatively old LTRs is enabled by reducing the
 similarity between LTRs to 85% (default value of LTRharvest) and
@@ -549,9 +495,9 @@ otherwise identical to <code>recentLTRs</code>).
 </div>
 </div>
 
-<div id="outline-container-orgc4fd262" class="outline-3">
-<h3 id="orgc4fd262"><span class="section-number-3">2.6</span> Cleaning LTR results</h3>
-<div class="outline-text-3" id="text-2-6">
+<div id="outline-container-org8405be2" class="outline-3">
+<h3 id="org8405be2"><span class="section-number-3">2.5</span> Cleaning LTR results</h3>
+<div class="outline-text-3" id="text-2-5">
 <p>
 LTRs (both new and old) identified above will almost certainly
 include false positives that need to be removed. The most common
@@ -636,12 +582,6 @@ considered as elements nested with other insertions.
 </p>
 
 <p>
-If internal regions of elements match sequences in MITE.lib (see
-1.), they are also considered as elements with nested
-insertions.
-</p>
-
-<p>
 The internal regions of elements are also used to search against
 a transposase database of DNA transposons. If the internal
 sequence has significant matches with any DNA transposase, it is
@@ -656,14 +596,13 @@ the sequence of the left (5'end) LTR sequence.
 <div class="org-src-container">
 <pre class="src src-groovy">ltrHarvestResults
 .combine(step3Passed, by: 0)
-.combine(mitelib1)
 .set { nestedInput }
 
 process identifyNestedInsetions {
   tag { age }
   input:
   file <span class="org-string">'genome.fasta'</span> from reference
-  set age, <span class="org-string">'seqfile.result'</span>, <span class="org-string">'CRL_Step3_Passed_Elements.fasta'</span>, <span class="org-string">'MITE.lib'</span> from nestedInput
+  set age, <span class="org-string">'seqfile.result'</span>, <span class="org-string">'CRL_Step3_Passed_Elements.fasta'</span> from nestedInput
 
   output:
   set age, <span class="org-string">'repeats_to_mask_LTR.fasta'</span> into repeatsToMaskLTR
@@ -673,7 +612,7 @@ process identifyNestedInsetions {
 <span class="org-string"> --resultfile seqfile.result \</span>
 <span class="org-string"> --step3 CRL_Step3_Passed_Elements.fasta \</span>
 <span class="org-string"> --sequencefile genome.fasta</span>
-<span class="org-string">cat MITE.lib lLTR_Only.lib \</span>
+<span class="org-string">cat lLTR_Only.lib \</span>
 <span class="org-string">| awk 'BEGIN {RS = "&gt;" ; FS = "\\n" ; ORS = ""} \$2 {print "&gt;"\$0}' \</span>
 <span class="org-string">&gt; repeats_to_mask_LTR.fasta</span>
 <span class="org-string">  """</span>
@@ -683,9 +622,9 @@ process identifyNestedInsetions {
 </div>
 </div>
 
-<div id="outline-container-org7e776e1" class="outline-3">
-<h3 id="org7e776e1"><span class="section-number-3">2.7</span> Identify elements with nested insertions</h3>
-<div class="outline-text-3" id="text-2-7">
+<div id="outline-container-orgc3d2fa4" class="outline-3">
+<h3 id="orgc3d2fa4"><span class="section-number-3">2.6</span> Identify elements with nested insertions</h3>
+<div class="outline-text-3" id="text-2-6">
 <p>
 Retrotranposons are frequently nested with each other or inserted
 by other elements. If left unidentified, it will cause
@@ -714,6 +653,10 @@ considered as elements nested with other insertions.
 <span class="org-string"> -no_is \</span>
 <span class="org-string"> -dir . \</span>
 <span class="org-string"> seqfile.outinner</span>
+
+<span class="org-string">if [ ! -f seqfile.outinner.masked ]; then</span>
+<span class="org-string">  cp seqfile.outinner seqfile.outinner.masked</span>
+<span class="org-string">fi</span>
 <span class="org-string">  """</span>
 }
 </pre>
@@ -738,34 +681,35 @@ considered as elements nested with other insertions.
 </div>
 
 <div class="org-src-container">
-<pre class="src src-groovy"> process blastX {
-   tag { age }
+<pre class="src src-groovy">process blastX {
+  tag { age }
 
-   input:
-   file <span class="org-string">'Tpases020812DNA.fasta'</span> from trnaprot
-   set age, <span class="org-string">'seqfile.outinner.clean'</span>, <span class="org-string">'seqfile.outinner'</span> from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
+  input:
+  file <span class="org-string">'Tpases020812DNA.fasta.gz'</span> from trnaprot
+  set age, <span class="org-string">'seqfile.outinner.clean'</span>, <span class="org-string">'seqfile.outinner'</span> from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
 
-   output:
-   set age, <span class="org-string">'passed_outinner_sequence.fasta'</span> into blastxPassed
+  output:
+  set age, <span class="org-string">'passed_outinner_sequence.fasta'</span> into blastxPassed
 
-   <span class="org-string">"""</span>
-<span class="org-string"> makeblastdb -in Tpases020812DNA.fasta -dbtype prot</span>
-<span class="org-string"> blastx \</span>
-<span class="org-string">  -query seqfile.outinner.clean \</span>
-<span class="org-string">  -db Tpases020812DNA.fasta \</span>
-<span class="org-string">  -evalue 1e-10 \</span>
-<span class="org-string">  -num_descriptions 10 \</span>
-<span class="org-string">  -out seqfile.outinner.clean_blastx.out.txt</span>
+  <span class="org-string">"""</span>
+<span class="org-string">zcat Tpases020812DNA.fasta.gz &gt; Tpases020812DNA.fasta</span>
+<span class="org-string">makeblastdb -in Tpases020812DNA.fasta -dbtype prot</span>
+<span class="org-string">blastx \</span>
+<span class="org-string"> -query seqfile.outinner.clean \</span>
+<span class="org-string"> -db Tpases020812DNA.fasta \</span>
+<span class="org-string"> -evalue 1e-10 \</span>
+<span class="org-string"> -num_descriptions 10 \</span>
+<span class="org-string"> -out seqfile.outinner.clean_blastx.out.txt</span>
 
-<span class="org-string"> outinner_blastx_parse.pl \</span>
-<span class="org-string">  --blastx seqfile.outinner.clean_blastx.out.txt \</span>
-<span class="org-string">  --outinner seqfile.outinner</span>
+<span class="org-string">outinner_blastx_parse.pl \</span>
+<span class="org-string"> --blastx seqfile.outinner.clean_blastx.out.txt \</span>
+<span class="org-string"> --outinner seqfile.outinner</span>
 
-<span class="org-string"> if [ ! -s passed_outinner_sequence.fasta ]; then</span>
-<span class="org-string">echo -e '&gt;dummy empty sequence\nACTACTAC' &gt; passed_outinner_sequence.fasta</span>
-<span class="org-string"> fi</span>
-<span class="org-string">   """</span>
- }
+<span class="org-string">if [ ! -s passed_outinner_sequence.fasta ]; then</span>
+<span class="org-string">  echo -e '&gt;dummy empty sequence\nACTACTAC' &gt; passed_outinner_sequence.fasta</span>
+<span class="org-string">fi</span>
+<span class="org-string">  """</span>
+}
 </pre>
 </div>
 
@@ -838,9 +782,7 @@ process removeDuplicates {
   output:
   set <span class="org-string">'ltrs.old.fasta.masked'</span>, <span class="org-string">'ltrs.new.fasta'</span> into bothLTRforMasking
 
-  <span class="org-string">"""</span>
-<span class="org-string">RepeatMasker -lib ltrs.new.fasta -dir . ltrs.old.fasta</span>
-<span class="org-string">  """</span>
+  <span class="org-string">"RepeatMasker -lib ltrs.new.fasta -dir . ltrs.old.fasta"</span>
 }
 
 process filterOldLTRs {
@@ -865,7 +807,6 @@ process filterOldLTRs {
 .splitFasta(record: [id: <span class="org-constant">true</span>, sequence: <span class="org-constant">true</span> ])
 .collectFile( name: <span class="org-string">'allLTRs.fasta'</span> ) { <span class="org-string">"&gt;"</span> + <span class="org-variable-name">it</span>.id + <span class="org-string">"#LTR\n"</span> + <span class="org-variable-name">it</span>.sequence }
 .tap { allLTR2 }
-.combine(mitelib2)
 .set { inputForRM2 }
 
 process <span class="org-type">RepeatMasker2</span> {
@@ -874,19 +815,17 @@ process <span class="org-type">RepeatMasker2</span> {
 
   input:
   file <span class="org-string">'genome.fasta'</span> from reference
-  set <span class="org-string">'allLTR.lib'</span>, <span class="org-string">'MITE.lib'</span> from inputForRM2
+  file <span class="org-string">'allLTR.lib'</span> from inputForRM2
 
   output:
-  file <span class="org-string">'genome.fasta.masked'</span> into genomeLtrMiteMasked
+  file <span class="org-string">'genome.fasta.masked'</span> into genomeLtrMasked
 
   <span class="org-string">"""</span>
-<span class="org-string">cat allLTR.lib MITE.lib &gt; allMITE_LTR.lib</span>
-
 <span class="org-string">RepeatMasker \</span>
 <span class="org-string"> -no_is \</span>
 <span class="org-string"> -nolow \</span>
 <span class="org-string"> -pa </span><span class="org-variable-name">${task.cpus}</span><span class="org-string"> \</span>
-<span class="org-string"> -lib allMITE_LTR.lib \</span>
+<span class="org-string"> -lib allLTR.lib \</span>
 <span class="org-string"> -dir . \</span>
 <span class="org-string"> genome.fasta</span>
 <span class="org-string">  """</span>
@@ -900,7 +839,7 @@ process <span class="org-type">RepeatMasker2</span> {
   cpus 4
 
   input:
-  file <span class="org-string">'genome.masked'</span> from genomeLtrMiteMasked
+  file <span class="org-string">'genome.masked'</span> from genomeLtrMasked
 
   output:
   file <span class="org-string">'consensi.fa.classified'</span> into rmOutput
@@ -931,7 +870,7 @@ rmOutput
 <div class="org-src-container">
 <pre class="src src-groovy">process transposonBlast {
   input:
-  file <span class="org-string">'transposases.fasta'</span> from trnaprot
+  file <span class="org-string">'transposases.fasta.gz'</span> from trnaprot
   file <span class="org-string">'repeatmodeler_unknowns.fasta'</span> from repeatmaskerUnknowns
 
   output:
@@ -939,6 +878,7 @@ rmOutput
   file <span class="org-string">'unknown_elements.txt'</span> into unknownElements
 
   <span class="org-string">"""</span>
+<span class="org-string">zcat transposases.fasta.gz &gt; transposases.fasta</span>
 <span class="org-string">makeblastdb \</span>
 <span class="org-string"> -in transposases.fasta \</span>
 <span class="org-string"> -dbtype prot</span>
@@ -958,14 +898,13 @@ rmOutput
 </div>
 </div>
 
-<div id="outline-container-org392e145" class="outline-3">
-<h3 id="org392e145"><span class="section-number-3">2.8</span> Final Masking</h3>
-<div class="outline-text-3" id="text-2-8">
+<div id="outline-container-org50c0013" class="outline-3">
+<h3 id="org50c0013"><span class="section-number-3">2.7</span> Final Masking</h3>
+<div class="outline-text-3" id="text-2-7">
 <div class="org-src-container">
 <pre class="src src-groovy">repeatmaskerKnowns
 .mix(identifiedTransposons)
 .collectFile() { <span class="org-variable-name">it</span>.text }
-.combine(mitelib3)
 .combine(allLTR2)
 .set { knownRepeats }
 </pre>
@@ -973,12 +912,12 @@ rmOutput
 
 <div class="org-src-container">
 <pre class="src src-groovy">process repeatMaskerKnowns {
-  publishDir <span class="org-string">"</span><span class="org-variable-name">${params.outdir}</span><span class="org-string">/</span><span class="org-variable-name">${params.strain}</span><span class="org-string">/repeatMaskerKnowns"</span>, mode: <span class="org-string">'copy'</span>
+  publishDir <span class="org-string">"</span><span class="org-variable-name">${params.outdir}</span><span class="org-string">/repeatMaskerKnowns"</span>, mode: <span class="org-string">'copy'</span>
   container <span class="org-string">'robsyme/repeatmasker-onbuild'</span>
 
   input:
   file <span class="org-string">'reference.fasta'</span> from reference
-  set <span class="org-string">'knownTransposons.lib'</span>, <span class="org-string">'MITE.lib'</span>, <span class="org-string">'allLTRs.lib'</span> from knownRepeats
+  set <span class="org-string">'knownTransposons.lib'</span>, <span class="org-string">'allLTRs.lib'</span> from knownRepeats
 
   output:
   set <span class="org-string">'reference.fasta.out'</span>, <span class="org-string">'reference.fasta.masked'</span> into repeatMaskerKnownsMasked
@@ -1023,12 +962,12 @@ rmOutput
 </div>
 </div>
 
-<div id="outline-container-orgf57a0f3" class="outline-3">
-<h3 id="orgf57a0f3"><span class="section-number-3">2.9</span> Summary tables and figures</h3>
-<div class="outline-text-3" id="text-2-9">
+<div id="outline-container-orgd932cf6" class="outline-3">
+<h3 id="orgd932cf6"><span class="section-number-3">2.8</span> Summary tables and figures</h3>
+<div class="outline-text-3" id="text-2-8">
 <div class="org-src-container">
 <pre class="src src-groovy">process summarise {
-  publishDir <span class="org-string">"</span><span class="org-variable-name">${params.outdir}</span><span class="org-string">/</span><span class="org-variable-name">${params.strain}</span><span class="org-string">/summarise"</span>, mode: <span class="org-string">'copy'</span>
+  publishDir <span class="org-string">"</span><span class="org-variable-name">${params.outdir}</span><span class="org-string">/summarise"</span>, mode: <span class="org-string">'copy'</span>
 
   input:
   file <span class="org-string">'summary.tsv'</span> from repeatmaskerSummaryTable
@@ -1068,7 +1007,7 @@ rmOutput
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Robert Syme</p>
-<p class="date">Created: 2017-08-22 Tue 11:14</p>
+<p class="date">Created: 2017-08-25 Fri 13:24</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

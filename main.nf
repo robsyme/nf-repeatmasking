@@ -1,11 +1,11 @@
 #!/usr/bin/env nextflow
 params.reference = 'data/example/genome.fasta'
-params.trnaprotgz = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
+params.trnaprot = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
 params.trnanuc = 'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'
 params.outdir = 'output'
 
 trnanuc = file(params.trnanuc)
-trnaprotgz = file(params.trnaprotgz)
+trnaprot = file(params.trnaprot)
 reference = file(params.reference)
 
 process recentLTRs {
@@ -220,16 +220,16 @@ rmshortinner.pl seqfile.outinner.unmasked 50 > seqfile.outinner.clean
 }
 
 process blastX {
-   tag { age }
+  tag { age }
 
-   input:
-   file 'Tpases020812DNA.fasta.gz' from trnaprotgz
-   set age, 'seqfile.outinner.clean', 'seqfile.outinner' from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
+  input:
+  file 'Tpases020812DNA.fasta.gz' from trnaprot
+  set age, 'seqfile.outinner.clean', 'seqfile.outinner' from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
 
-   output:
-   set age, 'passed_outinner_sequence.fasta' into blastxPassed
+  output:
+  set age, 'passed_outinner_sequence.fasta' into blastxPassed
 
-   """
+  """
 zcat Tpases020812DNA.fasta.gz > Tpases020812DNA.fasta
 makeblastdb -in Tpases020812DNA.fasta -dbtype prot
 blastx \
@@ -246,8 +246,8 @@ outinner_blastx_parse.pl \
 if [ ! -s passed_outinner_sequence.fasta ]; then
   echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
 fi
-   """
- }
+  """
+}
 
 blastxPassed
 .combine(step3PassedForExamplars, by: 0)
@@ -307,9 +307,7 @@ process removeDuplicates {
   output:
   set 'ltrs.old.fasta.masked', 'ltrs.new.fasta' into bothLTRforMasking
 
-  """
-RepeatMasker -lib ltrs.new.fasta -dir . ltrs.old.fasta
-  """
+  "RepeatMasker -lib ltrs.new.fasta -dir . ltrs.old.fasta"
 }
 
 process filterOldLTRs {
@@ -385,7 +383,7 @@ repeatmaskerKnowns = identityKnown.collectFile() { record -> ['known.fasta', rec
 
 process transposonBlast {
   input:
-  file 'transposases.fasta.gz' from trnaprotgz
+  file 'transposases.fasta.gz' from trnaprot
   file 'repeatmodeler_unknowns.fasta' from repeatmaskerUnknowns
 
   output:
@@ -416,7 +414,7 @@ repeatmaskerKnowns
 .set { knownRepeats }
 
 process repeatMaskerKnowns {
-  publishDir "${params.outdir}/${params.strain}/repeatMaskerKnowns", mode: 'copy'
+  publishDir "${params.outdir}/repeatMaskerKnowns", mode: 'copy'
   container 'robsyme/repeatmasker-onbuild'
 
   input:
@@ -460,7 +458,7 @@ done >> summary.tsv
 }
 
 process summarise {
-  publishDir "${params.outdir}/${params.strain}/summarise", mode: 'copy'
+  publishDir "${params.outdir}/summarise", mode: 'copy'
 
   input:
   file 'summary.tsv' from repeatmaskerSummaryTable

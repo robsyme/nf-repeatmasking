@@ -55,50 +55,6 @@
      reference = file(params.reference)
    #+END_SRC
 
-** MITEs
-
-	MITEs are collected using MITE-Hunter with all default
-	parameters. This step requires specific versions of perl modules
-	and older version of blastall, so it is run inside its own docker
-	container published here:
-	https://hub.docker.com/r/robsyme/mitehunter/. If you'd prefer to
-	generate your own image, the Dockerfile and associated code is in
-	[[file:/../dockerfiles/mitehunter]].
-
-	#+BEGIN_SRC groovy :tangle ../main.nf
-      process mitehunter {
-	    container 'robsyme/mitehunter'
-    	cpus 10
-
-    	input:
-    	file 'genome.fasta' from reference
-
-    	output:
-    	file 'MITE.lib' into mitelib
-
-    	"""
-      MITE_Hunter_manager.pl -i genome.fasta -n ${task.cpus} -S 12345678
-      cat *Step8*.fa > MITE.lib
-    	"""
-      }
-	#+END_SRC
-
-	We have a channel =mitelib= that contains our putative MITE
-	sequences. Their fasta ids are not named according to the
-	RepeatMasker convention, so to have them recognised correctly, we
-	add '=#MITE=' to the end of each fasta id. The resulting channel
-	is also duplicated as we use the renamed fasta file at a number of
-	later stages:
-
-	#+BEGIN_SRC groovy :tangle ../main.nf
-	  mitelib
-	  .splitFasta(record: [id: true, sequence: true ])
-	  .collectFile( name: 'MITE.lib' ) { ">" + it.id + "#MITE\n" + it.sequence }
-	  .tap { mitelib1 }
-	  .tap { mitelib2 }
-	  .set { mitelib3 }
-	#+END_SRC
-
 ** Collection of relatively recent LTR retrotranposons
 
 	The rationale for initial collection of recent LTR elements is
@@ -321,10 +277,6 @@
 	LTR sequences are detected in the internal regions, it is
 	considered as elements nested with other insertions.
 
-	If internal regions of elements match sequences in MITE.lib (see
-	1.), they are also considered as elements with nested
-	insertions.
-
 	The internal regions of elements are also used to search against
 	a transposase database of DNA transposons. If the internal
 	sequence has significant matches with any DNA transposase, it is
@@ -334,30 +286,29 @@
 	the sequence of the left (5'end) LTR sequence.
 
 	#+BEGIN_SRC groovy :tangle ../main.nf
-      ltrHarvestResults
-      .combine(step3Passed, by: 0)
-      .combine(mitelib1)
-      .set { nestedInput }
+	  ltrHarvestResults
+	  .combine(step3Passed, by: 0)
+	  .set { nestedInput }
 
-      process identifyNestedInsetions {
-    	tag { age }
-    	input:
+	  process identifyNestedInsetions {
+		tag { age }
+		input:
 		file 'genome.fasta' from reference
-    	set age, 'seqfile.result', 'CRL_Step3_Passed_Elements.fasta', 'MITE.lib' from nestedInput
+		set age, 'seqfile.result', 'CRL_Step3_Passed_Elements.fasta' from nestedInput
 
-    	output:
-    	set age, 'repeats_to_mask_LTR.fasta' into repeatsToMaskLTR
+		output:
+		set age, 'repeats_to_mask_LTR.fasta' into repeatsToMaskLTR
 
-    	"""
-      ltr_library.pl \
-       --resultfile seqfile.result \
-       --step3 CRL_Step3_Passed_Elements.fasta \
-       --sequencefile genome.fasta
-      cat MITE.lib lLTR_Only.lib \
-      | awk 'BEGIN {RS = ">" ; FS = "\\n" ; ORS = ""} \$2 {print ">"\$0}' \
-      > repeats_to_mask_LTR.fasta
-    	"""
-      }
+		"""
+	  ltr_library.pl \
+	   --resultfile seqfile.result \
+	   --step3 CRL_Step3_Passed_Elements.fasta \
+	   --sequencefile genome.fasta
+	  cat lLTR_Only.lib \
+	  | awk 'BEGIN {RS = ">" ; FS = "\\n" ; ORS = ""} \$2 {print ">"\$0}' \
+	  > repeats_to_mask_LTR.fasta
+		"""
+	  }
 	#+END_SRC
 
 ** Identify elements with nested insertions
@@ -371,25 +322,29 @@
    considered as elements nested with other insertions.
 
    #+BEGIN_SRC groovy :tangle ../main.nf
-     process RepeatMasker1 {
-       container 'robsyme/repeatmasker-onbuild'
-       tag { age }
+	 process RepeatMasker1 {
+	   container 'robsyme/repeatmasker-onbuild'
+	   tag { age }
 
-       input:
-       set age, 'repeats_to_mask_LTR.fasta', 'seqfile.outinner' from repeatsToMaskLTR.combine(ltrHarvestInner, by: 0)
+	   input:
+	   set age, 'repeats_to_mask_LTR.fasta', 'seqfile.outinner' from repeatsToMaskLTR.combine(ltrHarvestInner, by: 0)
 
-       output:
-       set age, 'seqfile.outinner.out', 'seqfile.outinner.masked' into repeatMasker1Unclean
+	   output:
+	   set age, 'seqfile.outinner.out', 'seqfile.outinner.masked' into repeatMasker1Unclean
 
-       """
-     RepeatMasker \
-      -lib repeats_to_mask_LTR.fasta \
-      -nolow \
-      -no_is \
-      -dir . \
-      seqfile.outinner
-       """
-     }
+	   """
+	 RepeatMasker \
+	  -lib repeats_to_mask_LTR.fasta \
+	  -nolow \
+	  -no_is \
+	  -dir . \
+	  seqfile.outinner
+
+	 if [ ! -f seqfile.outinner.masked ]; then
+	   cp seqfile.outinner seqfile.outinner.masked
+	 fi
+	   """
+	 }
    #+END_SRC
 
    #+BEGIN_SRC groovy :tangle ../main.nf
@@ -410,34 +365,35 @@
    #+END_SRC
 
    #+BEGIN_SRC groovy :tangle ../main.nf
-     process blastX {
-   	   tag { age }
+	 process blastX {
+	   tag { age }
 
-       input:
-   	   file 'Tpases020812DNA.fasta' from trnaprot
-       set age, 'seqfile.outinner.clean', 'seqfile.outinner' from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
+	   input:
+	   file 'Tpases020812DNA.fasta.gz' from trnaprot
+	   set age, 'seqfile.outinner.clean', 'seqfile.outinner' from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
 
-       output:
-       set age, 'passed_outinner_sequence.fasta' into blastxPassed
+	   output:
+	   set age, 'passed_outinner_sequence.fasta' into blastxPassed
 
-       """
-     makeblastdb -in Tpases020812DNA.fasta -dbtype prot
-     blastx \
-      -query seqfile.outinner.clean \
-      -db Tpases020812DNA.fasta \
-      -evalue 1e-10 \
-      -num_descriptions 10 \
-      -out seqfile.outinner.clean_blastx.out.txt
+	   """
+	 zcat Tpases020812DNA.fasta.gz > Tpases020812DNA.fasta
+	 makeblastdb -in Tpases020812DNA.fasta -dbtype prot
+	 blastx \
+	  -query seqfile.outinner.clean \
+	  -db Tpases020812DNA.fasta \
+	  -evalue 1e-10 \
+	  -num_descriptions 10 \
+	  -out seqfile.outinner.clean_blastx.out.txt
 
-     outinner_blastx_parse.pl \
-      --blastx seqfile.outinner.clean_blastx.out.txt \
-      --outinner seqfile.outinner
+	 outinner_blastx_parse.pl \
+	  --blastx seqfile.outinner.clean_blastx.out.txt \
+	  --outinner seqfile.outinner
 
-     if [ ! -s passed_outinner_sequence.fasta ]; then
-   	echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
-     fi
-       """
-     }
+	 if [ ! -s passed_outinner_sequence.fasta ]; then
+	   echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
+	 fi
+	   """
+	 }
    #+END_SRC
 
    #+BEGIN_SRC groovy :tangle ../main.nf
@@ -506,9 +462,7 @@
        output:
        set 'ltrs.old.fasta.masked', 'ltrs.new.fasta' into bothLTRforMasking
 
-       """
-     RepeatMasker -lib ltrs.new.fasta -dir . ltrs.old.fasta
-       """
+       "RepeatMasker -lib ltrs.new.fasta -dir . ltrs.old.fasta"
      }
 
 	 process filterOldLTRs {
@@ -532,7 +486,6 @@
 	 .splitFasta(record: [id: true, sequence: true ])
 	 .collectFile( name: 'allLTRs.fasta' ) { ">" + it.id + "#LTR\n" + it.sequence }
 	 .tap { allLTR2 }
-     .combine(mitelib2)
      .set { inputForRM2 }
 
      process RepeatMasker2 {
@@ -541,19 +494,17 @@
 
        input:
 	   file 'genome.fasta' from reference
-       set 'allLTR.lib', 'MITE.lib' from inputForRM2
+       file 'allLTR.lib' from inputForRM2
 
        output:
-       file 'genome.fasta.masked' into genomeLtrMiteMasked
+       file 'genome.fasta.masked' into genomeLtrMasked
 
        """
-     cat allLTR.lib MITE.lib > allMITE_LTR.lib
-
      RepeatMasker \
 	  -no_is \
 	  -nolow \
 	  -pa ${task.cpus} \
-      -lib allMITE_LTR.lib \
+      -lib allLTR.lib \
       -dir . \
       genome.fasta
        """
@@ -566,7 +517,7 @@
 	   cpus 4
 
        input:
-       file 'genome.masked' from genomeLtrMiteMasked
+       file 'genome.masked' from genomeLtrMasked
 
        output:
 	   file 'consensi.fa.classified' into rmOutput
@@ -593,30 +544,31 @@
    #+END_SRC
 
    #+BEGIN_SRC groovy :tangle ../main.nf
-     process transposonBlast {
-       input:
-	   file 'transposases.fasta' from trnaprot
-       file 'repeatmodeler_unknowns.fasta' from repeatmaskerUnknowns
+	 process transposonBlast {
+	   input:
+	   file 'transposases.fasta.gz' from trnaprot
+	   file 'repeatmodeler_unknowns.fasta' from repeatmaskerUnknowns
 
-       output:
-       file 'identified_elements.txt' into identifiedTransposons
-       file 'unknown_elements.txt' into unknownElements
+	   output:
+	   file 'identified_elements.txt' into identifiedTransposons
+	   file 'unknown_elements.txt' into unknownElements
 
-       """
-     makeblastdb \
-      -in transposases.fasta \
-      -dbtype prot
-     blastx \
-      -query repeatmodeler_unknowns.fasta \
-      -db transposases.fasta \
-      -evalue 1e-10 \
-      -num_descriptions 10 \
-      -out modelerunknown_blast_results.txt
-     transposon_blast_parse.pl \
-      --blastx modelerunknown_blast_results.txt \
-      --modelerunknown repeatmodeler_unknowns.fasta
-       """
-     }
+	   """
+	 zcat transposases.fasta.gz > transposases.fasta
+	 makeblastdb \
+	  -in transposases.fasta \
+	  -dbtype prot
+	 blastx \
+	  -query repeatmodeler_unknowns.fasta \
+	  -db transposases.fasta \
+	  -evalue 1e-10 \
+	  -num_descriptions 10 \
+	  -out modelerunknown_blast_results.txt
+	 transposon_blast_parse.pl \
+	  --blastx modelerunknown_blast_results.txt \
+	  --modelerunknown repeatmodeler_unknowns.fasta
+	   """
+	 }
    #+END_SRC
 
 ** Final Masking
@@ -625,19 +577,18 @@
 	 repeatmaskerKnowns
 	 .mix(identifiedTransposons)
 	 .collectFile() { it.text }
-     .combine(mitelib3)
      .combine(allLTR2)
 	 .set { knownRepeats }
    #+END_SRC
 
    #+BEGIN_SRC groovy :tangle ../main.nf
      process repeatMaskerKnowns {
-	   publishDir "${params.outdir}/${params.strain}/repeatMaskerKnowns", mode: 'copy'
+	   publishDir "${params.outdir}/repeatMaskerKnowns", mode: 'copy'
        container 'robsyme/repeatmasker-onbuild'
 
        input:
        file 'reference.fasta' from reference
-       set 'knownTransposons.lib', 'MITE.lib', 'allLTRs.lib' from knownRepeats
+       set 'knownTransposons.lib', 'allLTRs.lib' from knownRepeats
 
        output:
        set 'reference.fasta.out', 'reference.fasta.masked' into repeatMaskerKnownsMasked
@@ -682,7 +633,7 @@
 
    #+BEGIN_SRC groovy :tangle ../main.nf
      process summarise {
-	   publishDir "${params.outdir}/${params.strain}/summarise", mode: 'copy'
+	   publishDir "${params.outdir}/summarise", mode: 'copy'
 
        input:
        file 'summary.tsv' from repeatmaskerSummaryTable
