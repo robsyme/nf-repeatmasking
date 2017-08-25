@@ -221,6 +221,7 @@ rmshortinner.pl seqfile.outinner.unmasked 50 > seqfile.outinner.clean
 
 process blastX {
   tag { age }
+  cpus 4
 
   input:
   file 'Tpases020812DNA.fasta.gz' from trnaprot
@@ -237,6 +238,7 @@ blastx \
  -db Tpases020812DNA.fasta \
  -evalue 1e-10 \
  -num_descriptions 10 \
+ -num_threads ${task.cpus} \
  -out seqfile.outinner.clean_blastx.out.txt
 
 outinner_blastx_parse.pl \
@@ -256,6 +258,7 @@ blastxPassed
 
 process buildExemplars {
   tag { age }
+  cpus 4
 
   input:
   file 'genome.fasta' from reference
@@ -277,6 +280,7 @@ for lib in lLTRs_Seq_For_BLAST.fasta Inner_Seq_For_BLAST.fasta; do
    -query \${lib} \
    -db \${lib} \
    -evalue 1e-10 \
+   -num_threads ${task.cpus} \
    -num_descriptions 1000 \
    -out \${lib}.out
 done
@@ -382,6 +386,8 @@ repeatmaskerUnknowns = identityUnknown.collectFile() { record -> ['unknown.fasta
 repeatmaskerKnowns = identityKnown.collectFile() { record -> ['known.fasta', record.text] }
 
 process transposonBlast {
+  cpus 4
+
   input:
   file 'transposases.fasta.gz' from trnaprot
   file 'repeatmodeler_unknowns.fasta' from repeatmaskerUnknowns
@@ -400,6 +406,7 @@ blastx \
  -db transposases.fasta \
  -evalue 1e-10 \
  -num_descriptions 10 \
+ -num_threads ${task.cpus} \
  -out modelerunknown_blast_results.txt
 transposon_blast_parse.pl \
  --blastx modelerunknown_blast_results.txt \

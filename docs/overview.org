@@ -20,9 +20,6 @@
   		 --output-document repeatmaskerlibraries.tar.gz \
 		 http://www.girinst.org/server/RepBase/protected/repeatmaskerlibraries/repeatmaskerlibraries-20140131.tar.gz
 
-    # Rename the tar.gz archive to 'repeatmaskerlibraries.tar.gz'
-    mv repeatmaskerlibraries-20140131.tar.gz repeatmaskerlibraries.tar.gz
-
     # Make an (almost) empty Dockerfile.
     #  All of the important instructions are in the repeatmasker-onbuild image
     #  You can view them here: https://github.com/robsyme/nextflow-annotate/blob/master/Dockerfiles/RepeatMasker-onbuild/Dockerfile
@@ -30,7 +27,7 @@
 
     # Build a new docker image called 'nf-repeatmasking'.
     #  When building, this image looks for a file called 'repeatmaskerlibraries.tar.gz' which it pulls into the image.
-    docker build -t nf-repeatmasking .
+    docker build -t repeats .
   #+END_SRC
 
 * Walkthrough
@@ -367,6 +364,7 @@
    #+BEGIN_SRC groovy :tangle ../main.nf
 	 process blastX {
 	   tag { age }
+	   cpus 4
 
 	   input:
 	   file 'Tpases020812DNA.fasta.gz' from trnaprot
@@ -383,6 +381,7 @@
 	  -db Tpases020812DNA.fasta \
 	  -evalue 1e-10 \
 	  -num_descriptions 10 \
+	  -num_threads ${task.cpus} \
 	  -out seqfile.outinner.clean_blastx.out.txt
 
 	 outinner_blastx_parse.pl \
@@ -404,6 +403,7 @@
 
      process buildExemplars {
        tag { age }
+	   cpus 4
 
        input:
 	   file 'genome.fasta' from reference
@@ -425,6 +425,7 @@
     	-query \${lib} \
     	-db \${lib} \
     	-evalue 1e-10 \
+		-num_threads ${task.cpus} \
     	-num_descriptions 1000 \
     	-out \${lib}.out
      done
@@ -545,6 +546,8 @@
 
    #+BEGIN_SRC groovy :tangle ../main.nf
 	 process transposonBlast {
+	   cpus 4
+	 
 	   input:
 	   file 'transposases.fasta.gz' from trnaprot
 	   file 'repeatmodeler_unknowns.fasta' from repeatmaskerUnknowns
@@ -563,6 +566,7 @@
 	  -db transposases.fasta \
 	  -evalue 1e-10 \
 	  -num_descriptions 10 \
+	  -num_threads ${task.cpus} \
 	  -out modelerunknown_blast_results.txt
 	 transposon_blast_parse.pl \
 	  --blastx modelerunknown_blast_results.txt \
