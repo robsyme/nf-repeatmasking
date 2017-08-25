@@ -82,60 +82,62 @@
 	and if the flanking sequence /also/ aligns, we discard it.
 
 	#+BEGIN_SRC groovy :tangle ../main.nf
-      process recentLTRs {
-        input:
-     	file 'genome.fasta' from reference
-     	file 'eukaryotic-tRNAs.fasta.gz' from trnanuc
+	  process recentLTRs {
+		container 'robsyme/nf-repeatmasking'
 
-     	output:
+		input:
+		file 'genome.fasta' from reference
+		file 'eukaryotic-tRNAs.fasta.gz' from trnanuc
+
+		output:
 		set age, 'seqfile.result' into ltrHarvestNew
 		set age, 'seqfile.outinner' into ltrInnerSeqNew
-     	set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' into recentLTRs
+		set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' into recentLTRs
 
 		script:
 		age = 'new'
-     	"""
-      gt suffixerator -db genome.fasta -indexname genome.fasta -tis -suf -lcp -des -ssp -dna
+		"""
+	  gt suffixerator -db genome.fasta -indexname genome.fasta -tis -suf -lcp -des -ssp -dna
 
-      gt ltrharvest \
-       -index genome.fasta \
-       -out seqfile.out \
-       -outinner seqfile.outinner \
-       -gff3 seqfile.gff \
-       -minlenltr 100 \
-       -maxlenltr 6000 \
-       -mindistltr 1500 \
-       -maxdistltr 25000 \
-       -mintsd 5 \
-       -maxtsd 5 \
-       -motif tgca \
-       -similar 99 \
-       -vic 10 \
-      > seqfile.result
+	  gt ltrharvest \
+	   -index genome.fasta \
+	   -out seqfile.out \
+	   -outinner seqfile.outinner \
+	   -gff3 seqfile.gff \
+	   -minlenltr 100 \
+	   -maxlenltr 6000 \
+	   -mindistltr 1500 \
+	   -maxdistltr 25000 \
+	   -mintsd 5 \
+	   -maxtsd 5 \
+	   -motif tgca \
+	   -similar 99 \
+	   -vic 10 \
+	  > seqfile.result
 
-      gt gff3 \
-       -sort seqfile.gff \
-      > seqfile.gff.sort
+	  gt gff3 \
+	   -sort seqfile.gff \
+	  > seqfile.gff.sort
 
 	  zcat eukaryotic-tRNAs.fasta.gz > eukaryotic-tRNAs.fasta
 
-      gt ltrdigest \
-       -trnas eukaryotic-tRNAs.fasta \
-       seqfile.gff.sort \
-       genome.fasta \
-      > seqfile.gff.dgt
+	  gt ltrdigest \
+	   -trnas eukaryotic-tRNAs.fasta \
+	   seqfile.gff.sort \
+	   genome.fasta \
+	  > seqfile.gff.dgt
 
-      CRL_Step1.pl \
-       --gff seqfile.gff.dgt
+	  CRL_Step1.pl \
+	   --gff seqfile.gff.dgt
 
-      CRL_Step2.pl \
-       --step1 CRL_Step1_Passed_Elements.txt \
-       --repeatfile seqfile.out \
-       --resultfile seqfile.result \
-       --sequencefile genome.fasta \
-       --removed_repeats CRL_Step2_Passed_Elements.fasta
-     	"""
-      }
+	  CRL_Step2.pl \
+	   --step1 CRL_Step1_Passed_Elements.txt \
+	   --repeatfile seqfile.out \
+	   --resultfile seqfile.result \
+	   --sequencefile genome.fasta \
+	   --removed_repeats CRL_Step2_Passed_Elements.fasta
+		"""
+	  }
 	#+END_SRC
 
 ** Collection of relatively old LTR retrotransposons
@@ -147,6 +149,8 @@
 
 	#+BEGIN_SRC groovy :tangle ../main.nf
       process olderLTRs {
+		container 'robsyme/nf-repeatmasking'
+
     	input:
     	file 'genome.fasta' from reference
     	file 'eukaryotic-tRNAs.fasta.gz' from trnanuc
@@ -248,6 +252,7 @@
 
 	#+BEGIN_SRC groovy :tangle ../main.nf
       process CRL_Step3 {
+		container 'robsyme/nf-repeatmasking'
 	    tag { age }
 		input:
 		set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' from ltrs
@@ -288,6 +293,7 @@
 	  .set { nestedInput }
 
 	  process identifyNestedInsetions {
+		container 'robsyme/nf-repeatmasking'
 		tag { age }
 		input:
 		file 'genome.fasta' from reference
@@ -320,7 +326,7 @@
 
    #+BEGIN_SRC groovy :tangle ../main.nf
 	 process RepeatMasker1 {
-	   container 'robsyme/nf-repeatmasking-onbuild'
+	   container 'robsyme/nf-repeatmasking'
 	   tag { age }
 
 	   input:
@@ -363,6 +369,7 @@
 
    #+BEGIN_SRC groovy :tangle ../main.nf
 	 process blastX {
+       container 'robsyme/nf-repeatmasking'
 	   tag { age }
 	   cpus 4
 
@@ -402,6 +409,7 @@
      .set { forExamplarBuilding }
 
      process buildExemplars {
+       container 'robsyme/nf-repeatmasking'
        tag { age }
 	   cpus 4
 
@@ -454,7 +462,7 @@
 	 .route( new: newLTRs, old: oldLTRs) { it[0] }
 
      process removeDuplicates {
-       container 'robsyme/nf-repeatmasking-onbuild'
+       container 'robsyme/nf-repeatmasking'
 
        input:
        set _, 'ltrs.new.fasta' from newLTRs
@@ -467,6 +475,8 @@
      }
 
 	 process filterOldLTRs {
+       container 'robsyme/nf-repeatmasking'
+
 	   input:
        set 'ltrs.old.fasta.masked', 'ltrs.new.fasta' from bothLTRforMasking
 
@@ -490,7 +500,7 @@
      .set { inputForRM2 }
 
      process RepeatMasker2 {
-       container 'robsyme/nf-repeatmasking-onbuild'
+       container 'robsyme/nf-repeatmasking'
 	   cpus 10
 
        input:
@@ -546,6 +556,7 @@
 
    #+BEGIN_SRC groovy :tangle ../main.nf
 	 process transposonBlast {
+       container 'robsyme/nf-repeatmasking'
 	   cpus 4
 	 
 	   input:
@@ -587,8 +598,8 @@
 
    #+BEGIN_SRC groovy :tangle ../main.nf
      process repeatMaskerKnowns {
+       container 'robsyme/nf-repeatmasking'
 	   publishDir "${params.outdir}/repeatMaskerKnowns", mode: 'copy'
-       container 'robsyme/nf-repeatmasking-onbuild'
 
        input:
        file 'reference.fasta' from reference
@@ -614,6 +625,8 @@
 
    #+BEGIN_SRC groovy :tangle ../main.nf
      process octfta {
+       container 'robsyme/nf-repeatmasking'
+
        input:
        file 'reference.fa' from reference
        set 'rm.out', 'rm.masked' from repeatMaskerKnownsMasked

@@ -9,6 +9,8 @@ trnaprot = file(params.trnaprot)
 reference = file(params.reference)
 
 process recentLTRs {
+  container 'robsyme/nf-repeatmasking'
+
   input:
   file 'genome.fasta' from reference
   file 'eukaryotic-tRNAs.fasta.gz' from trnanuc
@@ -64,6 +66,8 @@ CRL_Step2.pl \
 }
 
 process olderLTRs {
+  container 'robsyme/nf-repeatmasking'
+
   input:
   file 'genome.fasta' from reference
   file 'eukaryotic-tRNAs.fasta.gz' from trnanuc
@@ -139,6 +143,7 @@ outinnerForBlastX = outinnerForBlastXOld.mix(outinnerForBlastXNew)
 ltrHarvestResultsForExamplar = ltrHarvestResultsForExamplarOld.mix(ltrHarvestResultsForExamplarNew)
 
 process CRL_Step3 {
+  container 'robsyme/nf-repeatmasking'
   tag { age }
   input:
   set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' from ltrs
@@ -161,6 +166,7 @@ ltrHarvestResults
 .set { nestedInput }
 
 process identifyNestedInsetions {
+  container 'robsyme/nf-repeatmasking'
   tag { age }
   input:
   file 'genome.fasta' from reference
@@ -181,7 +187,7 @@ cat lLTR_Only.lib \
 }
 
 process RepeatMasker1 {
-  container 'robsyme/nf-repeatmasking-onbuild'
+  container 'robsyme/nf-repeatmasking'
   tag { age }
 
   input:
@@ -220,6 +226,7 @@ rmshortinner.pl seqfile.outinner.unmasked 50 > seqfile.outinner.clean
 }
 
 process blastX {
+  container 'robsyme/nf-repeatmasking'
   tag { age }
   cpus 4
 
@@ -257,6 +264,7 @@ blastxPassed
 .set { forExamplarBuilding }
 
 process buildExemplars {
+  container 'robsyme/nf-repeatmasking'
   tag { age }
   cpus 4
 
@@ -302,7 +310,7 @@ exemplars
 .route( new: newLTRs, old: oldLTRs) { it[0] }
 
 process removeDuplicates {
-  container 'robsyme/nf-repeatmasking-onbuild'
+  container 'robsyme/nf-repeatmasking'
 
   input:
   set _, 'ltrs.new.fasta' from newLTRs
@@ -315,6 +323,8 @@ process removeDuplicates {
 }
 
 process filterOldLTRs {
+  container 'robsyme/nf-repeatmasking'
+
   input:
   set 'ltrs.old.fasta.masked', 'ltrs.new.fasta' from bothLTRforMasking
 
@@ -336,7 +346,7 @@ allLTR
 .set { inputForRM2 }
 
 process RepeatMasker2 {
-  container 'robsyme/nf-repeatmasking-onbuild'
+  container 'robsyme/nf-repeatmasking'
   cpus 10
 
   input:
@@ -386,6 +396,7 @@ repeatmaskerUnknowns = identityUnknown.collectFile() { record -> ['unknown.fasta
 repeatmaskerKnowns = identityKnown.collectFile() { record -> ['known.fasta', record.text] }
 
 process transposonBlast {
+  container 'robsyme/nf-repeatmasking'
   cpus 4
 
   input:
@@ -421,8 +432,8 @@ repeatmaskerKnowns
 .set { knownRepeats }
 
 process repeatMaskerKnowns {
+  container 'robsyme/nf-repeatmasking'
   publishDir "${params.outdir}/repeatMaskerKnowns", mode: 'copy'
-  container 'robsyme/nf-repeatmasking-onbuild'
 
   input:
   file 'reference.fasta' from reference
@@ -446,6 +457,8 @@ RepeatMasker \
 }
 
 process octfta {
+  container 'robsyme/nf-repeatmasking'
+
   input:
   file 'reference.fa' from reference
   set 'rm.out', 'rm.masked' from repeatMaskerKnownsMasked
