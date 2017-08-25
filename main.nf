@@ -1,4 +1,6 @@
 #!/usr/bin/env nextflow
+VERSION = "1.0.0"
+
 params.reference = 'data/example/genome.fasta'
 params.trnaprot = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
 params.trnanuc = 'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'
@@ -7,6 +9,12 @@ params.outdir = 'output'
 trnanuc = file(params.trnanuc)
 trnaprot = file(params.trnaprot)
 reference = file(params.reference)
+
+log.info ""
+log.info "R E P E A T M A S K I N G  ~  version " + VERSION
+log.info "reference input           : ${params.reference}"
+log.info "output directory          : ${params.outdir}"
+log.info ""
 
 process recentLTRs {
   container 'robsyme/nf-repeatmasking'
