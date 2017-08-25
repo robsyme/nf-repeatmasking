@@ -181,7 +181,7 @@ cat lLTR_Only.lib \
 }
 
 process RepeatMasker1 {
-  container 'robsyme/repeatmasker-onbuild'
+  container 'robsyme/nf-repeatmasking-onbuild'
   tag { age }
 
   input:
@@ -302,7 +302,7 @@ exemplars
 .route( new: newLTRs, old: oldLTRs) { it[0] }
 
 process removeDuplicates {
-  container 'robsyme/repeatmasker-onbuild'
+  container 'robsyme/nf-repeatmasking-onbuild'
 
   input:
   set _, 'ltrs.new.fasta' from newLTRs
@@ -336,7 +336,7 @@ allLTR
 .set { inputForRM2 }
 
 process RepeatMasker2 {
-  container 'robsyme/repeatmasker-onbuild'
+  container 'robsyme/nf-repeatmasking-onbuild'
   cpus 10
 
   input:
@@ -422,7 +422,7 @@ repeatmaskerKnowns
 
 process repeatMaskerKnowns {
   publishDir "${params.outdir}/repeatMaskerKnowns", mode: 'copy'
-  container 'robsyme/repeatmasker-onbuild'
+  container 'robsyme/nf-repeatmasking-onbuild'
 
   input:
   file 'reference.fasta' from reference
