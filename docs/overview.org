@@ -657,37 +657,48 @@
 ** Summary tables and figures
 
    #+BEGIN_SRC groovy :tangle ../main.nf
-     process summarise {
-       publishDir "${params.outdir}/summarise", mode: 'copy'
+	 process summarise {
+	   publishDir "${params.outdir}/summarise", mode: 'copy'
 
-       input:
-       file 'summary.tsv' from repeatmaskerSummaryTable
+	   input:
+	   file 'summary.tsv' from repeatmaskerSummaryTable
 
-       output:
-       set 'summary.bycontig.tidy.tsv', 'summary.tidy.tsv' into finalSummary
+	   output:
+	   set 'summary.bycontig.tidy.tsv', 'summary.tidy.tsv'
 
-       """
-     #!/usr/bin/env Rscript
-     library(ggplot2)
-     library(dplyr)
-     library(tidyr)
-     library(magrittr)
+	   """
+	 #!/usr/bin/env Rscript
+	 library(ggplot2)
+	 library(dplyr)
+	 library(tidyr)
+	 library(magrittr)
 
-     data <- read.table('summary.tsv', header=TRUE) %>%
-             separate(Family, into=c("Family", "Subfamily"), sep="/") %>%
-             group_by(chrname, Family, Subfamily) %>%
-             summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %>%
-             unite("Family", Family, Subfamily, sep="/")
+	 data <- read.table('summary.tsv', header=TRUE) %>%
+			 separate(Family, into=c("Family", "Subfamily"), sep="/") %>%
+			 group_by(chrname, Family, Subfamily) %>%
+			 summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %>%
+			 unite("Family", Family, Subfamily, sep="/")
 
-     write.table(data, file='summary.bycontig.tidy.tsv')
+	 write.table(data, file='summary.bycontig.tidy.tsv')
 
-     data <- read.table('summary.tsv', header=TRUE) %>%
-             separate(Family, into=c("Family", "Subfamily"), sep="/") %>%
-             group_by(Family, Subfamily) %>%
-             summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %>%
-             unite("Family", Family, Subfamily, sep="/")
+	 data <- read.table('summary.tsv', header=TRUE) %>%
+			 separate(Family, into=c("Family", "Subfamily"), sep="/") %>%
+			 group_by(Family, Subfamily) %>%
+			 summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %>%
+			 unite("Family", Family, Subfamily, sep="/")
 
-     write.table(data, file='summary.tidy.tsv')
-       """
-     }
+	 write.table(data, file='summary.tidy.tsv', row.names = FALSE)
+	   """
+	 }
    #+END_SRC
+
+   Finish up with some logs:
+
+   #+BEGIN_SRC groovy :tangle ../main.nf
+	 log.info ""
+	 log.info "FINISHED"
+	 log.info "output directory           : ${params.outdir}"
+	 log.info ""
+   #+END_SRC
+
+   

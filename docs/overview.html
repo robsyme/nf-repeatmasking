@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2017-08-25 Fri 15:57 -->
+<!-- 2017-08-26 Sat 10:46 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Repeat Masking Pipeline</title>
@@ -234,25 +234,25 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org9526bb1">1. Installing</a></li>
-<li><a href="#org2b2a944">2. Walkthrough</a>
+<li><a href="#org731c97a">1. Installing</a></li>
+<li><a href="#org16e612a">2. Walkthrough</a>
 <ul>
-<li><a href="#orgb73f2ba">2.1. Introduction</a></li>
-<li><a href="#org3a0aa87">2.2. Parameter Setup</a></li>
-<li><a href="#org14463f9">2.3. Collection of relatively recent LTR retrotranposons</a></li>
-<li><a href="#orge355118">2.4. Collection of relatively old LTR retrotransposons</a></li>
-<li><a href="#org95660ee">2.5. Cleaning LTR results</a></li>
-<li><a href="#org83919dd">2.6. Identify elements with nested insertions</a></li>
-<li><a href="#org4984453">2.7. Final Masking</a></li>
-<li><a href="#org0d03920">2.8. Summary tables and figures</a></li>
+<li><a href="#orgbf33b07">2.1. Introduction</a></li>
+<li><a href="#org1640c54">2.2. Parameter Setup</a></li>
+<li><a href="#org692d418">2.3. Collection of relatively recent LTR retrotranposons</a></li>
+<li><a href="#orgeac2f4b">2.4. Collection of relatively old LTR retrotransposons</a></li>
+<li><a href="#orgd22eded">2.5. Cleaning LTR results</a></li>
+<li><a href="#org1d96500">2.6. Identify elements with nested insertions</a></li>
+<li><a href="#org1c6e24e">2.7. Final Masking</a></li>
+<li><a href="#org7aec039">2.8. Summary tables and figures</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org9526bb1" class="outline-2">
-<h2 id="org9526bb1"><span class="section-number-2">1</span> Installing</h2>
+<div id="outline-container-org731c97a" class="outline-2">
+<h2 id="org731c97a"><span class="section-number-2">1</span> Installing</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Ideally, the only prerequisites would be <a href="https://www.nextflow.io/">Nextflow</a> and
@@ -288,11 +288,11 @@ docker build -t repeats .
 </div>
 </div>
 
-<div id="outline-container-org2b2a944" class="outline-2">
-<h2 id="org2b2a944"><span class="section-number-2">2</span> Walkthrough</h2>
+<div id="outline-container-org16e612a" class="outline-2">
+<h2 id="org16e612a"><span class="section-number-2">2</span> Walkthrough</h2>
 <div class="outline-text-2" id="text-2">
-</div><div id="outline-container-orgb73f2ba" class="outline-3">
-<h3 id="orgb73f2ba"><span class="section-number-3">2.1</span> Introduction</h3>
+</div><div id="outline-container-orgbf33b07" class="outline-3">
+<h3 id="orgbf33b07"><span class="section-number-3">2.1</span> Introduction</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
 This is a <a href="https://en.wikipedia.org/wiki/Literate_programming">literate-programming</a> style walk through the pipeline,
@@ -301,8 +301,8 @@ tangled to compose the  pipline, which is written out to <a href="../main.nf"><c
 </p>
 </div>
 </div>
-<div id="outline-container-org3a0aa87" class="outline-3">
-<h3 id="org3a0aa87"><span class="section-number-3">2.2</span> Parameter Setup</h3>
+<div id="outline-container-org1640c54" class="outline-3">
+<h3 id="org1640c54"><span class="section-number-3">2.2</span> Parameter Setup</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 There is some necessary setup and housekeeping to begin. This is
@@ -332,8 +332,8 @@ log.info <span class="org-string">""</span>
 </div>
 </div>
 
-<div id="outline-container-org14463f9" class="outline-3">
-<h3 id="org14463f9"><span class="section-number-3">2.3</span> Collection of relatively recent LTR retrotranposons</h3>
+<div id="outline-container-org692d418" class="outline-3">
+<h3 id="org692d418"><span class="section-number-3">2.3</span> Collection of relatively recent LTR retrotranposons</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
 The rationale for initial collection of recent LTR elements is
@@ -434,8 +434,8 @@ and if the flanking sequence <i>also</i> aligns, we discard it.
 </div>
 </div>
 
-<div id="outline-container-orge355118" class="outline-3">
-<h3 id="orge355118"><span class="section-number-3">2.4</span> Collection of relatively old LTR retrotransposons</h3>
+<div id="outline-container-orgeac2f4b" class="outline-3">
+<h3 id="orgeac2f4b"><span class="section-number-3">2.4</span> Collection of relatively old LTR retrotransposons</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
 Collection of relatively old LTRs is enabled by reducing the
@@ -504,8 +504,8 @@ otherwise identical to <code>recentLTRs</code>).
 </div>
 </div>
 
-<div id="outline-container-org95660ee" class="outline-3">
-<h3 id="org95660ee"><span class="section-number-3">2.5</span> Cleaning LTR results</h3>
+<div id="outline-container-orgd22eded" class="outline-3">
+<h3 id="orgd22eded"><span class="section-number-3">2.5</span> Cleaning LTR results</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
 LTRs (both new and old) identified above will almost certainly
@@ -633,8 +633,8 @@ process identifyNestedInsetions {
 </div>
 </div>
 
-<div id="outline-container-org83919dd" class="outline-3">
-<h3 id="org83919dd"><span class="section-number-3">2.6</span> Identify elements with nested insertions</h3>
+<div id="outline-container-org1d96500" class="outline-3">
+<h3 id="org1d96500"><span class="section-number-3">2.6</span> Identify elements with nested insertions</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
 Retrotranposons are frequently nested with each other or inserted
@@ -921,8 +921,8 @@ rmOutput
 </div>
 </div>
 
-<div id="outline-container-org4984453" class="outline-3">
-<h3 id="org4984453"><span class="section-number-3">2.7</span> Final Masking</h3>
+<div id="outline-container-org1c6e24e" class="outline-3">
+<h3 id="org1c6e24e"><span class="section-number-3">2.7</span> Final Masking</h3>
 <div class="outline-text-3" id="text-2-7">
 <div class="org-src-container">
 <pre class="src src-groovy">repeatmaskerKnowns
@@ -987,8 +987,8 @@ rmOutput
 </div>
 </div>
 
-<div id="outline-container-org0d03920" class="outline-3">
-<h3 id="org0d03920"><span class="section-number-3">2.8</span> Summary tables and figures</h3>
+<div id="outline-container-org7aec039" class="outline-3">
+<h3 id="org7aec039"><span class="section-number-3">2.8</span> Summary tables and figures</h3>
 <div class="outline-text-3" id="text-2-8">
 <div class="org-src-container">
 <pre class="src src-groovy">process summarise {
@@ -998,7 +998,7 @@ rmOutput
   file <span class="org-string">'summary.tsv'</span> from repeatmaskerSummaryTable
 
   output:
-  set <span class="org-string">'summary.bycontig.tidy.tsv'</span>, <span class="org-string">'summary.tidy.tsv'</span> into finalSummary
+  set <span class="org-string">'summary.bycontig.tidy.tsv'</span>, <span class="org-string">'summary.tidy.tsv'</span>
 
   <span class="org-string">"""</span>
 <span class="org-string">#!/usr/bin/env Rscript</span>
@@ -1021,9 +1021,21 @@ rmOutput
 <span class="org-string">        summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %&gt;%</span>
 <span class="org-string">        unite("Family", Family, Subfamily, sep="/")</span>
 
-<span class="org-string">write.table(data, file='summary.tidy.tsv')</span>
+<span class="org-string">write.table(data, file='summary.tidy.tsv', row.names = FALSE)</span>
 <span class="org-string">  """</span>
 }
+</pre>
+</div>
+
+<p>
+Finish up with some logs:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy">log.info <span class="org-string">""</span>
+log.info <span class="org-string">"FINISHED"</span>
+log.info <span class="org-string">"output directory           : </span><span class="org-variable-name">${params.outdir}</span><span class="org-string">"</span>
+log.info <span class="org-string">""</span>
 </pre>
 </div>
 </div>
@@ -1032,7 +1044,7 @@ rmOutput
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Robert Syme</p>
-<p class="date">Created: 2017-08-25 Fri 15:57</p>
+<p class="date">Created: 2017-08-26 Sat 10:46</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

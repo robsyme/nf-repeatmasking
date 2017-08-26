@@ -492,7 +492,7 @@ process summarise {
   file 'summary.tsv' from repeatmaskerSummaryTable
 
   output:
-  set 'summary.bycontig.tidy.tsv', 'summary.tidy.tsv' into finalSummary
+  set 'summary.bycontig.tidy.tsv', 'summary.tidy.tsv'
 
   """
 #!/usr/bin/env Rscript
@@ -502,19 +502,24 @@ library(tidyr)
 library(magrittr)
 
 data <- read.table('summary.tsv', header=TRUE) %>%
-        separate(Family, into=c("Family", "Subfamily"), sep="/") %>%
-        group_by(chrname, Family, Subfamily) %>%
-        summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %>%
-        unite("Family", Family, Subfamily, sep="/")
+		separate(Family, into=c("Family", "Subfamily"), sep="/") %>%
+		group_by(chrname, Family, Subfamily) %>%
+		summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %>%
+		unite("Family", Family, Subfamily, sep="/")
 
 write.table(data, file='summary.bycontig.tidy.tsv')
 
 data <- read.table('summary.tsv', header=TRUE) %>%
-        separate(Family, into=c("Family", "Subfamily"), sep="/") %>%
-        group_by(Family, Subfamily) %>%
-        summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %>%
-        unite("Family", Family, Subfamily, sep="/")
+		separate(Family, into=c("Family", "Subfamily"), sep="/") %>%
+		group_by(Family, Subfamily) %>%
+		summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %>%
+		unite("Family", Family, Subfamily, sep="/")
 
-write.table(data, file='summary.tidy.tsv')
+write.table(data, file='summary.tidy.tsv', row.names = FALSE)
   """
 }
+
+log.info ""
+log.info "FINISHED"
+log.info "output directory           : ${params.outdir}"
+log.info ""
