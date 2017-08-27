@@ -12,8 +12,8 @@ reference = file(params.reference)
 
 log.info ""
 log.info "R E P E A T M A S K I N G  ~  version " + VERSION
-log.info "reference input            : ${params.reference}"
-log.info "output directory           : ${params.outdir}"
+log.info "reference input    : ${params.reference}"
+log.info "output directory   : ${params.outdir}"
 log.info ""
 
 process recentLTRs {
@@ -83,7 +83,7 @@ process olderLTRs {
   output:
   set age, 'seqfile.result' into ltrHarvestOld
   set age, 'seqfile.outinner' into ltrInnerSeqOld
-  set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_*.fasta' into olderLTRs
+  set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' into olderLTRs
 
   script:
   age = 'old'
@@ -153,6 +153,7 @@ ltrHarvestResultsForExamplar = ltrHarvestResultsForExamplarOld.mix(ltrHarvestRes
 process CRL_Step3 {
   container 'robsyme/nf-repeatmasking'
   tag { age }
+
   input:
   set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' from ltrs
 
@@ -315,7 +316,7 @@ newLTRs = Channel.create()
 oldLTRs = Channel.create()
 
 exemplars
-.route( new: newLTRs, old: oldLTRs) { it[0] }
+.choice( newLTRs, oldLTRs ) { it[0] == "new" ? 0 : 1 }
 
 process removeDuplicates {
   container 'robsyme/nf-repeatmasking'
@@ -519,7 +520,7 @@ write.table(data, file='summary.tidy.tsv', row.names = FALSE)
   """
 }
 
-log.info ""
-log.info "FINISHED"
-log.info "output directory           : ${params.outdir}"
-log.info ""
+workflow.onComplete {
+	log.info "Pipeline completed at: $workflow.complete"
+	log.info "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+}

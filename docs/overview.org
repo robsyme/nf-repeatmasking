@@ -42,22 +42,22 @@
    and the output location for our final figures and tables.
 
    #+BEGIN_SRC groovy :tangle ../main.nf :shebang #!/usr/bin/env nextflow
-     VERSION = "1.0.0"
+	 VERSION = "1.0.0"
 
-     params.reference = 'data/example/genome.fasta'
-     params.trnaprot = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
-     params.trnanuc = 'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'
-     params.outdir = 'output'
+	 params.reference = 'data/example/genome.fasta'
+	 params.trnaprot = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
+	 params.trnanuc = 'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'
+	 params.outdir = 'output'
 
-     trnanuc = file(params.trnanuc)
-     trnaprot = file(params.trnaprot)
-     reference = file(params.reference)
+	 trnanuc = file(params.trnanuc)
+	 trnaprot = file(params.trnaprot)
+	 reference = file(params.reference)
 
-     log.info ""
-     log.info "R E P E A T M A S K I N G  ~  version " + VERSION
-     log.info "reference input            : ${params.reference}"
-     log.info "output directory           : ${params.outdir}"
-     log.info ""
+	 log.info ""
+	 log.info "R E P E A T M A S K I N G  ~  version " + VERSION
+	 log.info "reference input    : ${params.reference}"
+	 log.info "output directory   : ${params.outdir}"
+	 log.info ""
    #+END_SRC
 
 ** Collection of relatively recent LTR retrotranposons
@@ -166,7 +166,7 @@
         output:
         set age, 'seqfile.result' into ltrHarvestOld
         set age, 'seqfile.outinner' into ltrInnerSeqOld
-        set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_*.fasta' into olderLTRs
+        set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' into olderLTRs
 
         script:
         age = 'old'
@@ -262,6 +262,7 @@
       process CRL_Step3 {
         container 'robsyme/nf-repeatmasking'
         tag { age }
+
         input:
         set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' from ltrs
 
@@ -467,7 +468,7 @@
      oldLTRs = Channel.create()
 
      exemplars
-     .route( new: newLTRs, old: oldLTRs) { it[0] }
+	 .choice( newLTRs, oldLTRs ) { it[0] == "new" ? 0 : 1 }
 
      process removeDuplicates {
        container 'robsyme/nf-repeatmasking'
@@ -556,8 +557,8 @@
 
      rmOutput
      .splitFasta(record: [id: true, text: true])
-     .choice(identityUnknown, identityKnown) { record -> record.id =~ /#Unknown/ ? 0 : 1 }
-
+	 .choice(identityUnknown, identityKnown) { record -> record.id =~ /#Unknown/ ? 0 : 1 }
+	 
      repeatmaskerUnknowns = identityUnknown.collectFile() { record -> ['unknown.fasta', record.text] }
      repeatmaskerKnowns = identityKnown.collectFile() { record -> ['known.fasta', record.text] }
    #+END_SRC
@@ -691,14 +692,11 @@
 	   """
 	 }
    #+END_SRC
-
-   Finish up with some logs:
+   
 
    #+BEGIN_SRC groovy :tangle ../main.nf
-	 log.info ""
-	 log.info "FINISHED"
-	 log.info "output directory           : ${params.outdir}"
-	 log.info ""
+	 workflow.onComplete {
+		 log.info "Pipeline completed at: $workflow.complete"
+		 log.info "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+	 }
    #+END_SRC
-
-   
