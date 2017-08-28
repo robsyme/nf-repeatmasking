@@ -521,6 +521,6 @@ write.table(data, file='summary.tidy.tsv', row.names = FALSE)
 }
 
 workflow.onComplete {
-	log.info "Pipeline completed at: $workflow.complete"
-	log.info "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+    log.info "Pipeline completed at: $workflow.complete"
+    log.info "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
 }
