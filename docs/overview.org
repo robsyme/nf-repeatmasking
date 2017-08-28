@@ -553,8 +553,8 @@
 
      rmOutput
      .splitFasta(record: [id: true, text: true])
-	 .choice(identityUnknown, identityKnown) { record -> record.id =~ /#Unknown/ ? 0 : 1 }
-	 
+     .choice(identityUnknown, identityKnown) { record -> record.id =~ /#Unknown/ ? 0 : 1 }
+     
      repeatmaskerUnknowns = identityUnknown.collectFile() { record -> ['unknown.fasta', record.text] }
      repeatmaskerKnowns = identityKnown.collectFile() { record -> ['known.fasta', record.text] }
    #+END_SRC
