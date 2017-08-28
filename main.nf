@@ -340,13 +340,9 @@ process filterOldLTRs {
   output:
   file 'allLTRs.fasta' into allLTR
 
-  """
-remove_masked_sequence.pl \
- --masked_elements ltrs.old.fasta.masked \
- --outfile ltrs.old.final.fasta
-cat ltrs.new.fasta ltrs.old.final.fasta > allLTRs.fasta
-  """
-}
+  """ remove_masked_sequence.pl \ --masked_elements
+ltrs.old.fasta.masked \ --outfile ltrs.old.final.fasta cat
+ltrs.new.fasta ltrs.old.final.fasta > allLTRs.fasta """ }
 
 allLTR
 .splitFasta(record: [id: true, sequence: true ])
