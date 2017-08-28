@@ -234,10 +234,9 @@
     thresholds.
 
     #+BEGIN_SRC groovy :tangle ../main.nf
-
       ltrHarvestNew
       .tap { ltrHarvestResultsNew }
-      .set { ltrHarvestResultsForExamplarNew }
+      .set { ltrHarvestResultsForExemplarNew }
 
       ltrInnerSeqNew
       .tap { ltrHarvestInnerNew }
@@ -245,7 +244,7 @@
 
       ltrHarvestOld
       .tap { ltrHarvestResultsOld }
-      .set { ltrHarvestResultsForExamplarOld }
+      .set { ltrHarvestResultsForExemplarOld }
 
       ltrInnerSeqOld
       .tap { ltrHarvestInnerOld }
@@ -255,7 +254,7 @@
       ltrHarvestResults = ltrHarvestResultsOld.mix(ltrHarvestResultsNew)
       ltrHarvestInner = ltrHarvestInnerOld.mix(ltrHarvestInnerNew)
       outinnerForBlastX = outinnerForBlastXOld.mix(outinnerForBlastXNew)
-      ltrHarvestResultsForExamplar = ltrHarvestResultsForExamplarOld.mix(ltrHarvestResultsForExamplarNew)
+      ltrHarvestResultsForExemplar = ltrHarvestResultsForExemplarOld.mix(ltrHarvestResultsForExemplarNew)
     #+END_SRC
 
     #+BEGIN_SRC groovy :tangle ../main.nf
@@ -268,7 +267,7 @@
 
         output:
         set age, 'CRL_Step3_Passed_Elements.fasta' into step3Passed
-        set age, 'CRL_Step3_Passed_Elements.fasta' into step3PassedForExamplars
+        set age, 'CRL_Step3_Passed_Elements.fasta' into step3PassedForExemplars
 
         """
       CRL_Step3.pl \
@@ -413,9 +412,9 @@
 
    #+BEGIN_SRC groovy :tangle ../main.nf
      blastxPassed
-     .combine(step3PassedForExamplars, by: 0)
-     .combine(ltrHarvestResultsForExamplar, by: 0)
-     .set { forExamplarBuilding }
+     .combine(step3PassedForExemplars, by: 0)
+     .combine(ltrHarvestResultsForExemplar, by: 0)
+     .set { forExemplarBuilding }
 
      process buildExemplars {
        container 'robsyme/nf-repeatmasking'
@@ -424,7 +423,7 @@
 
        input:
        file 'genome.fasta' from reference
-       set age, 'passed_outinner_sequence.fasta', 'CRL_Step3_Passed_Elements.fasta', 'seqfile.result' from forExamplarBuilding
+       set age, 'passed_outinner_sequence.fasta', 'CRL_Step3_Passed_Elements.fasta', 'seqfile.result' from forExemplarBuilding
 
        output:
        set age, 'LTR.lib' into exemplars
@@ -459,7 +458,7 @@
    #+END_SRC
 
    Since the set of older LTR elements contain elements from the
-   newer LTR set, the examplar sequences need to be masked by
+   newer LTR set, the exemplar sequences need to be masked by
    LTR99.lib and all elements that are significantly masked (cutoff
    at 80% identity in 90% of the element length) are excluded.
 
@@ -492,9 +491,13 @@
        output:
        file 'allLTRs.fasta' into allLTR
 
-       """ remove_masked_sequence.pl \ --masked_elements
-     ltrs.old.fasta.masked \ --outfile ltrs.old.final.fasta cat
-     ltrs.new.fasta ltrs.old.final.fasta > allLTRs.fasta """ }
+       """
+     remove_masked_sequence.pl \
+     --masked_elements ltrs.old.fasta.masked \
+     --outfile ltrs.old.final.fasta cat
+     ltrs.new.fasta ltrs.old.final.fasta > allLTRs.fasta
+       """
+     }
    #+END_SRC
 
    #+BEGIN_SRC groovy :tangle ../main.nf

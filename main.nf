@@ -130,7 +130,7 @@ CRL_Step2.pl \
 
 ltrHarvestNew
 .tap { ltrHarvestResultsNew }
-.set { ltrHarvestResultsForExamplarNew }
+.set { ltrHarvestResultsForExemplarNew }
 
 ltrInnerSeqNew
 .tap { ltrHarvestInnerNew }
@@ -138,7 +138,7 @@ ltrInnerSeqNew
 
 ltrHarvestOld
 .tap { ltrHarvestResultsOld }
-.set { ltrHarvestResultsForExamplarOld }
+.set { ltrHarvestResultsForExemplarOld }
 
 ltrInnerSeqOld
 .tap { ltrHarvestInnerOld }
@@ -148,7 +148,7 @@ ltrs = recentLTRs.mix(olderLTRs)
 ltrHarvestResults = ltrHarvestResultsOld.mix(ltrHarvestResultsNew)
 ltrHarvestInner = ltrHarvestInnerOld.mix(ltrHarvestInnerNew)
 outinnerForBlastX = outinnerForBlastXOld.mix(outinnerForBlastXNew)
-ltrHarvestResultsForExamplar = ltrHarvestResultsForExamplarOld.mix(ltrHarvestResultsForExamplarNew)
+ltrHarvestResultsForExemplar = ltrHarvestResultsForExemplarOld.mix(ltrHarvestResultsForExemplarNew)
 
 process CRL_Step3 {
   container 'robsyme/nf-repeatmasking'
@@ -159,7 +159,7 @@ process CRL_Step3 {
 
   output:
   set age, 'CRL_Step3_Passed_Elements.fasta' into step3Passed
-  set age, 'CRL_Step3_Passed_Elements.fasta' into step3PassedForExamplars
+  set age, 'CRL_Step3_Passed_Elements.fasta' into step3PassedForExemplars
 
   """
 CRL_Step3.pl \
@@ -268,9 +268,9 @@ fi
 }
 
 blastxPassed
-.combine(step3PassedForExamplars, by: 0)
-.combine(ltrHarvestResultsForExamplar, by: 0)
-.set { forExamplarBuilding }
+.combine(step3PassedForExemplars, by: 0)
+.combine(ltrHarvestResultsForExemplar, by: 0)
+.set { forExemplarBuilding }
 
 process buildExemplars {
   container 'robsyme/nf-repeatmasking'
@@ -279,7 +279,7 @@ process buildExemplars {
 
   input:
   file 'genome.fasta' from reference
-  set age, 'passed_outinner_sequence.fasta', 'CRL_Step3_Passed_Elements.fasta', 'seqfile.result' from forExamplarBuilding
+  set age, 'passed_outinner_sequence.fasta', 'CRL_Step3_Passed_Elements.fasta', 'seqfile.result' from forExemplarBuilding
 
   output:
   set age, 'LTR.lib' into exemplars
@@ -340,9 +340,13 @@ process filterOldLTRs {
   output:
   file 'allLTRs.fasta' into allLTR
 
-  """ remove_masked_sequence.pl \ --masked_elements
-ltrs.old.fasta.masked \ --outfile ltrs.old.final.fasta cat
-ltrs.new.fasta ltrs.old.final.fasta > allLTRs.fasta """ }
+  """
+remove_masked_sequence.pl \
+--masked_elements ltrs.old.fasta.masked \
+--outfile ltrs.old.final.fasta cat
+ltrs.new.fasta ltrs.old.final.fasta > allLTRs.fasta
+  """
+}
 
 allLTR
 .splitFasta(record: [id: true, sequence: true ])
