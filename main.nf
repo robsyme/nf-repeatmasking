@@ -24,8 +24,10 @@ process recentLTRs {
   file 'eukaryotic-tRNAs.fasta.gz' from trnanuc
 
   output:
-  set age, 'seqfile.result' into ltrHarvestNew
-  set age, 'seqfile.outinner' into ltrInnerSeqNew
+  set age, 'seqfile.result' into ltrHarvestResultsNew
+  set age, 'seqfile.result' into ltrHarvestResultsForExemplarNew
+  set age, 'seqfile.outinner' into ltrHarvestInnerNew
+  set age, 'seqfile.outinner' into outinnerForBlastXNew
   set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' into recentLTRs
 
   script:
@@ -81,8 +83,10 @@ process olderLTRs {
   file 'eukaryotic-tRNAs.fasta.gz' from trnanuc
 
   output:
-  set age, 'seqfile.result' into ltrHarvestOld
-  set age, 'seqfile.outinner' into ltrInnerSeqOld
+  set age, 'seqfile.result' into ltrHarvestResultsOld
+  set age, 'seqfile.result' into ltrHarvestResultsForExemplarOld
+  set age, 'seqfile.outinner' into ltrHarvestInnerOld
+  set age, 'seqfile.outinner' into outinnerForBlastXOld
   set age, 'CRL_Step2_Passed_Elements.fasta', 'Repeat_down*.fasta', 'Repeat_up*.fasta' into olderLTRs
 
   script:
@@ -127,22 +131,6 @@ CRL_Step2.pl \
  --removed_repeats CRL_Step2_Passed_Elements.fasta
   """
 }
-
-ltrHarvestNew
-.tap { ltrHarvestResultsNew }
-.set { ltrHarvestResultsForExemplarNew }
-
-ltrInnerSeqNew
-.tap { ltrHarvestInnerNew }
-.set { outinnerForBlastXNew }
-
-ltrHarvestOld
-.tap { ltrHarvestResultsOld }
-.set { ltrHarvestResultsForExemplarOld }
-
-ltrInnerSeqOld
-.tap { ltrHarvestInnerOld }
-.set { outinnerForBlastXOld }
 
 ltrs = recentLTRs.mix(olderLTRs)
 ltrHarvestResults = ltrHarvestResultsOld.mix(ltrHarvestResultsNew)
@@ -343,8 +331,8 @@ process filterOldLTRs {
   """
 remove_masked_sequence.pl \
 --masked_elements ltrs.old.fasta.masked \
---outfile ltrs.old.final.fasta cat
-ltrs.new.fasta ltrs.old.final.fasta > allLTRs.fasta
+--outfile ltrs.old.final.fasta
+cat ltrs.new.fasta ltrs.old.final.fasta > allLTRs.fasta
   """
 }
 
