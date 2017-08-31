@@ -402,7 +402,6 @@ process transposonBlast {
 
   output:
   file 'identified_elements.txt' into identifiedTransposons
-  file 'unknown_elements.txt' into unknownElements
 
   """
 zcat transposases.fasta.gz > transposases.fasta
