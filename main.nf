@@ -437,12 +437,12 @@ process repeatMaskerKnowns {
 
   output:
   set 'reference.fasta.out', 'reference.fasta.masked' into repeatMaskerKnownsMasked
-  file 'reference.fasta.out.gff'
+  set 'reference.fasta.out.gff', 'knownRepeats.library.fasta'
 
   """
-cat *.lib > knownRepeats.fasta
+cat *.lib > knownRepeats.library.fasta
 RepeatMasker \
- -lib knownRepeats.fasta \
+ -lib knownRepeats.library.fasta \
  -nolow \
  -no_is \
  -dir . \
