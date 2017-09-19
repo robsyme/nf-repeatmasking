@@ -240,7 +240,7 @@ makeblastdb -in Tpases020812DNA.fasta -dbtype prot
 blastx \
  -query seqfile.outinner.clean \
  -db Tpases020812DNA.fasta \
- -evalue 1e-10 \
+ -evalue 1e-20 \
  -num_descriptions 10 \
  -num_threads ${task.cpus} \
  -out seqfile.outinner.clean_blastx.out.txt
