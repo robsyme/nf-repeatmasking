@@ -36,10 +36,7 @@ cd `mktemp -d`
 wget --user $RB_USERNAME \
 	 --password $RB_PASSWORD \
 	 -O repeatmaskerlibraries.tar.gz \
-     http://www.girinst.org/server/RepBase/protected/repeatmaskerlibraries/repeatmaskerlibraries-20140131.tar.gz
-
-# Rename the tar.gz archive to 'repeatmaskerlibraries.tar.gz'
-mv repeatmaskerlibraries-20140131.tar.gz repeatmaskerlibraries.tar.gz
+     http://www.girinst.org/server/RepBase/protected/repeatmaskerlibraries/RepBaseRepeatMaskerEdition-20170127.tar.gz
 
 # Make an (almost) empty Dockerfile.
 #  All of the important instructions are in the repeatmasker-onbuild image
