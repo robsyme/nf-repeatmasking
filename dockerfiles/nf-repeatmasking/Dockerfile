@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 MAINTAINER Rob Syme <rob.syme@gmail.com>
 
@@ -39,7 +39,7 @@ RUN wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/rmblast/2.2.28/ncbi-rmblas
     rm -rf ncbi-rmblastn
 
 # Install Blast+
-RUN wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.6.0/ncbi-blast-2.6.0+-x64-linux.tar.gz && \
+RUN wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.7.1/ncbi-blast-2.7.1+-x64-linux.tar.gz && \
     tar -xzvf ncbi-blast* && \
     find ncbi-blast* -type f -executable -exec mv {} bin \; && \
     rm -rf ncbi-blast*
@@ -124,6 +124,9 @@ RUN apt-get install -qqy genometools bioperl
 
 # Install Aragon
 RUN apt-get install -qqy aragorn
+
+# This needs to be done in order for RepeatMasker to run
+RUN cpan Text::Soundex
 
 # I can't bundle the girinst RepBase libraries with the docker image,
 # so you'll need to get them yourself. Download them from
