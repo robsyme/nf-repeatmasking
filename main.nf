@@ -5,6 +5,7 @@ params.reference = 'data/example/genome.fasta'
 params.trnaprot = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
 params.trnanuc = 'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'
 params.outdir = 'output'
+params.minRepLength = 250
 
 trnanuc = file(params.trnanuc)
 trnaprot = file(params.trnaprot)
@@ -389,8 +390,82 @@ rmOutput
 .splitFasta(record: [id: true, text: true])
 .choice(identityUnknown, identityKnown) { record -> record.id =~ /#Unknown/ ? 0 : 1 }
 
-repeatmaskerUnknowns = identityUnknown.collectFile() { record -> ['unknown.fasta', record.text] }
-repeatmaskerKnowns = identityKnown.collectFile() { record -> ['known.fasta', record.text] }
+identityUnknown
+.collectFile() { record -> ['unknown.fasta', record.text] }
+.set { repeatmaskerUnknowns }
+
+identityKnown
+.collectFile() { record -> ['known.fasta', record.text] }
+.tap { repeatmaskerKnowns1 }
+.set{ repeatmaskerKnowns }
+
+process searchForUnidentifiedElements {
+  container 'robsyme/nf-repeatmasking'
+
+  input:
+  file 'genome.fasta' from reference
+  file 'unknown_elements.fasta' from repeatmaskerKnowns1
+
+  output:
+  set 'genome.fasta.align', 'unknown_elements.fasta' into unknownAlignments
+
+  """
+RepeatMasker \
+ -lib unknown_elements.fasta \
+ -alignments \
+ -nolow \
+ -no_is \
+ -dir . \
+ -inv \
+ genome.fasta
+  """
+}
+
+process derip {
+  input:
+  set 'genome.fasta.align', 'unknown_elements.fasta' from unknownAlignments
+
+  output:
+  file 'deripped.unknowns.fasta' into derippedUnknowns
+
+  """
+  rmalignment_to_fasta.rb genome.fasta.align unknown_elements.fasta
+  for file in alignment*; do
+	derip.rb \$file
+  done > deripped.unknowns.fasta
+  """
+}
+
+process classifyDeripped {
+  container 'repeats'
+
+  input:
+  file 'transposases.fasta.gz' from trnaprot
+  file 'repeatmodeler_unknowns.deripped.fasta' from derippedUnknowns
+
+  output:
+  file 'identified_elements.txt' into identifiedDerippedTransposons
+  file 'unknown_elements.txt' into unidentifiedDerippedTransposons
+
+  """
+zcat transposases.fasta.gz > transposases.fasta
+makeblastdb \
+ -in transposases.fasta \
+ -dbtype prot
+blastx \
+ -query repeatmodeler_unknowns.deripped.fasta \
+ -db transposases.fasta \
+ -evalue 1e-10 \
+ -num_descriptions 10 \
+ -num_threads ${task.cpus} \
+ -out modelerunknown_blast_results.txt
+transposon_blast_parse.pl \
+ --blastx modelerunknown_blast_results.txt \
+ --modelerunknown repeatmodeler_unknowns.deripped.fasta
+  """
+}
+
+identifiedDerippedTransposons.subscribe{ println("Identified, deripped: ${it}") }
 
 process transposonBlast {
   container 'robsyme/nf-repeatmasking'
@@ -402,6 +477,7 @@ process transposonBlast {
 
   output:
   file 'identified_elements.txt' into identifiedTransposons
+  file 'unknown_elements.txt' into unidentifiedTransposons
 
   """
 zcat transposases.fasta.gz > transposases.fasta
@@ -420,6 +496,40 @@ transposon_blast_parse.pl \
  --modelerunknown repeatmodeler_unknowns.fasta
   """
 }
+
+process predict_ncRNA {
+  container 'sangerpathogens/companion:latest'
+
+  input:
+  file 'genome.fasta' from reference
+
+  output:
+  file 'cm_out' into cmtblouts
+
+  """
+cp /opt/data/cm/rnas.cm models.cm
+cmpress -F models.cm
+cmsearch --cpu 1 --tblout cm_out --cut_ga models.cm genome.fasta
+  """
+}
+
+process merge_ncrnas {
+  container 'sangerpathogens/companion:latest'
+  cache 'deep'
+
+  input:
+  file 'cmtblout' from cmtblouts
+
+  output:
+  file 'ncrna.gff3' into ncrnafile
+
+  """
+  infernal_to_gff3.lua < ${cmtblout} > 1
+  gt gff3 -sort -tidy -retainids 1 > ncrna.gff3
+  """
+}
+
+ncrnafile.println()
 
 repeatmaskerKnowns
 .mix(identifiedTransposons)
@@ -452,12 +562,29 @@ RepeatMasker \
   """
 }
 
+process removeShortMatches {
+  container 'robsyme/nf-repeatmasking'
+  input:
+  file 'reference.fa' from reference
+  set 'rm.out', 'rm.masked' from repeatMaskerKnownsMasked
+
+  output:
+  set 'rm.trimmed.out', 'rm.trimmed.masked' from repeatMaskerKnownsMaskedTrimmed
+
+  """
+head -n 3 rm.out > rm.trimmed.out
+tail -n +4 rm.out | awk '\$7 - \$6 > ${params.minRepLength}' >> rm.trimmed.out
+tail -n +4 rm.out | awk 'BEGIN{OFS="\\t"} \$7 - \$6 > ${params.minRepLength} {print $5, $6, $7}' >> rm.trimmed.bed
+maskFastaFromBed -fi reference.fa -bed rm.trimmed.bed -fo rm.trimmed.masked -soft
+  """
+}
+
 process octfta {
   container 'robsyme/nf-repeatmasking'
 
   input:
   file 'reference.fa' from reference
-  set 'rm.out', 'rm.masked' from repeatMaskerKnownsMasked
+  set 'rm.out', 'rm.masked' from repeatMaskerKnownsMaskedTrimmed
 
   output:
   file 'summary.tsv' into repeatmaskerSummaryTable
