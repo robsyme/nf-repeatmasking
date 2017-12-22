@@ -574,7 +574,7 @@ process removeShortMatches {
   """
 head -n 3 rm.out > rm.trimmed.out
 tail -n +4 rm.out | awk '\$7 - \$6 > ${params.minRepLength}' >> rm.trimmed.out
-tail -n +4 rm.out | awk 'BEGIN{OFS="\\t"} \$7 - \$6 > ${params.minRepLength} {print $5, $6, $7}' >> rm.trimmed.bed
+tail -n +4 rm.out | awk 'BEGIN{OFS="\\t"} \$7 - \$6 > ${params.minRepLength} {print \$5, \$6, \$7}' >> rm.trimmed.bed
 maskFastaFromBed -fi reference.fa -bed rm.trimmed.bed -fo rm.trimmed.masked -soft
   """
 }
