@@ -569,7 +569,7 @@ process removeShortMatches {
   set 'rm.out', 'rm.masked' from repeatMaskerKnownsMasked
 
   output:
-  set 'rm.trimmed.out', 'rm.trimmed.masked' from repeatMaskerKnownsMaskedTrimmed
+  set 'rm.trimmed.out', 'rm.trimmed.masked' into repeatMaskerKnownsMaskedTrimmed
 
   """
 head -n 3 rm.out > rm.trimmed.out
