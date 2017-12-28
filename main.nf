@@ -378,7 +378,7 @@ process RepeatModeler {
   file 'consensi.fa.classified' into rmOutput
 
   """
-rmaskedpart.pl genome.masked 50 > umseqfile
+rmaskedpart.pl genome.masked 50 | sed '/^\$/d' > umseqfile
 BuildDatabase -name umseqfiledb -engine ncbi umseqfile
 RepeatModeler -pa ${task.cpus} -database umseqfiledb >& umseqfile.out
 mv RM*/consensi.fa.classified consensi.fa.classified
