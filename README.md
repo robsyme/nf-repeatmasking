@@ -63,3 +63,8 @@ You'll need the following pieces of software
 - dplyr
 - tidyr
 - magrittr
+
+## Citing
+
+[![DOI](https://zenodo.org/badge/99763100.svg)](https://zenodo.org/badge/latestdoi/99763100)
+
