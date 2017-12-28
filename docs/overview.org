@@ -523,7 +523,7 @@
 
    #+BEGIN_SRC groovy :tangle ../main.nf
      process RepeatModeler {
-       container 'repeats'
+       container 'robsyme/nf-repeatmasking'
        cpus 4
 
        input:
