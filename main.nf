@@ -19,6 +19,7 @@ log.info ""
 
 process recentLTRs {
   container 'robsyme/nf-repeatmasking'
+          cache 'deep'
 
   input:
   file 'genome.fasta' from reference
@@ -78,6 +79,7 @@ CRL_Step2.pl \
 
 process olderLTRs {
   container 'robsyme/nf-repeatmasking'
+          cache 'deep'
 
   input:
   file 'genome.fasta' from reference
@@ -400,54 +402,54 @@ identityKnown
 .set{ repeatmaskerKnowns }
 
 process searchForUnidentifiedElements {
-  container 'robsyme/nf-repeatmasking'
+      container 'robsyme/nf-repeatmasking'
 
-  input:
-  file 'genome.fasta' from reference
-  file 'unknown_elements.fasta' from repeatmaskerKnowns1
+      input:
+      file 'genome.fasta' from reference
+      file 'unknown_elements.fasta' from repeatmaskerKnowns1
 
-  output:
-  set 'genome.fasta.align', 'unknown_elements.fasta' into unknownAlignments
+      output:
+      set 'genome.fasta.align', 'unknown_elements.fasta' into unknownAlignments
 
-  """
-RepeatMasker \
- -lib unknown_elements.fasta \
- -alignments \
- -nolow \
- -no_is \
- -dir . \
- -inv \
- genome.fasta
-  """
-}
+      """
+    RepeatMasker \
+     -lib unknown_elements.fasta \
+     -alignments \
+     -nolow \
+     -no_is \
+     -dir . \
+     -inv \
+     genome.fasta
+      """
+    }
 
-process derip {
-  input:
-  set 'genome.fasta.align', 'unknown_elements.fasta' from unknownAlignments
+    process derip {
+      input:
+      set 'genome.fasta.align', 'unknown_elements.fasta' from unknownAlignments
 
-  output:
-  file 'deripped.unknowns.fasta' into derippedUnknowns
+      output:
+      file 'deripped.unknowns.fasta' into derippedUnknowns
 
-  """
-  rmalignment_to_fasta.rb genome.fasta.align unknown_elements.fasta
-  for file in alignment*; do
-	derip.rb \$file
-  done > deripped.unknowns.fasta
-  """
-}
+      """
+      rmalignment_to_fasta.rb genome.fasta.align unknown_elements.fasta
+      for file in alignment*; do
+        derip.rb \$file
+      done > deripped.unknowns.fasta
+      """
+    }
 
-process classifyDeripped {
+    process classifyDeripped {
   container 'repeats'
 
-  input:
+      input:
   file 'transposases.fasta.gz' from trnaprot
-  file 'repeatmodeler_unknowns.deripped.fasta' from derippedUnknowns
+      file 'repeatmodeler_unknowns.deripped.fasta' from derippedUnknowns
 
   output:
   file 'identified_elements.txt' into identifiedDerippedTransposons
-  file 'unknown_elements.txt' into unidentifiedDerippedTransposons
+      file 'unknown_elements.txt' into unidentifiedDerippedTransposons
 
-  """
+      """
 zcat transposases.fasta.gz > transposases.fasta
 makeblastdb \
  -in transposases.fasta \
@@ -462,10 +464,10 @@ blastx \
 transposon_blast_parse.pl \
  --blastx modelerunknown_blast_results.txt \
  --modelerunknown repeatmodeler_unknowns.deripped.fasta
-  """
-}
+      """
+    }
 
-identifiedDerippedTransposons.subscribe{ println("Identified, deripped: ${it}") }
+    identifiedDerippedTransposons.subscribe{ println("Identified, deripped: ${it}") }
 
 process transposonBlast {
   container 'robsyme/nf-repeatmasking'
@@ -477,7 +479,7 @@ process transposonBlast {
 
   output:
   file 'identified_elements.txt' into identifiedTransposons
-  file 'unknown_elements.txt' into unidentifiedTransposons
+      file 'unknown_elements.txt' into unidentifiedTransposons
 
   """
 zcat transposases.fasta.gz > transposases.fasta
@@ -564,17 +566,19 @@ RepeatMasker \
 
 process removeShortMatches {
   container 'robsyme/nf-repeatmasking'
+  publishDir "${params.outdir}/cleanMasked", mode: 'copy'
+
   input:
   file 'reference.fa' from reference
   set 'rm.out', 'rm.masked' from repeatMaskerKnownsMasked
 
   output:
-  set 'rm.trimmed.out', 'rm.trimmed.masked' from repeatMaskerKnownsMaskedTrimmed
+  set 'rm.trimmed.out', 'rm.trimmed.masked' into repeatMaskerKnownsMaskedTrimmed
 
   """
 head -n 3 rm.out > rm.trimmed.out
 tail -n +4 rm.out | awk '\$7 - \$6 > ${params.minRepLength}' >> rm.trimmed.out
-tail -n +4 rm.out | awk 'BEGIN{OFS="\\t"} \$7 - \$6 > ${params.minRepLength} {print $5, $6, $7}' >> rm.trimmed.bed
+tail -n +4 rm.out | awk 'BEGIN{OFS="\\t"} \$7 - \$6 > ${params.minRepLength} {print \$5, \$6, \$7}' >> rm.trimmed.bed
 maskFastaFromBed -fi reference.fa -bed rm.trimmed.bed -fo rm.trimmed.masked -soft
   """
 }
