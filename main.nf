@@ -368,7 +368,7 @@ RepeatMasker \
 }
 
 process RepeatModeler {
-  container 'repeats'
+  container 'robsyme/nf-repeatmasking'
   cpus 4
 
   input:
