@@ -39,13 +39,13 @@ wget --user $RB_USERNAME \
      http://www.girinst.org/server/RepBase/protected/repeatmaskerlibraries/RepBaseRepeatMaskerEdition-20170127.tar.gz
 
 # Make an (almost) empty Dockerfile.
-#  All of the important instructions are in the repeatmasker-onbuild image
-#  You can view them here: https://github.com/robsyme/nextflow-annotate/blob/master/Dockerfiles/RepeatMasker-onbuild/Dockerfile
-echo "FROM robsyme/repeatmasker-onbuild" > Dockerfile
+#  All of the important instructions are in the repeatmasker-onbuild image. You can either grab the pre-build copy from Dockerhub, 
+#  or you can build it from the Dockerfiles/nf-repeatmasking-onbuild directory of this repository.
+echo "FROM robsyme/nf-repeatmasking-onbuild" > Dockerfile
 
 # Build a new docker images called 'repeats'.
 #  When building, this image looks for a file called 'repeatmaskerlibraries.tar.gz' which it pulls into the image.
-docker build -t nf-repeatmasking .
+docker build -t robsyme/nf-repeatmasking .
 ```
 
 ## Natively
