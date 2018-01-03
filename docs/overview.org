@@ -93,7 +93,7 @@
     #+BEGIN_SRC groovy :tangle ../main.nf
       process recentLTRs {
         container 'robsyme/nf-repeatmasking'
-                cache 'deep'
+        cache 'deep'
 
         input:
         file 'genome.fasta' from reference
@@ -162,7 +162,7 @@
     #+BEGIN_SRC groovy :tangle ../main.nf
       process olderLTRs {
         container 'robsyme/nf-repeatmasking'
-                cache 'deep'
+        cache 'deep'
 
         input:
         file 'genome.fasta' from reference

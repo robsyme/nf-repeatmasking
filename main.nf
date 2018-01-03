@@ -19,7 +19,7 @@ log.info ""
 
 process recentLTRs {
   container 'robsyme/nf-repeatmasking'
-          cache 'deep'
+  cache 'deep'
 
   input:
   file 'genome.fasta' from reference
@@ -79,7 +79,7 @@ CRL_Step2.pl \
 
 process olderLTRs {
   container 'robsyme/nf-repeatmasking'
-          cache 'deep'
+  cache 'deep'
 
   input:
   file 'genome.fasta' from reference
