@@ -66,5 +66,5 @@ You'll need the following pieces of software
 
 ## Citing
 
-[![DOI](https://zenodo.org/badge/1134750.svg)](https://zenodo.org/badge/latestdoi/1134750)
+[![DOI](https://zenodo.org/badge/99763100.svg)](https://zenodo.org/badge/latestdoi/99763100)
 
