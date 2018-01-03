@@ -129,6 +129,9 @@ RUN apt-get install -qqy aragorn
 # so you'll need to get them yourself. Download them from
 # http://www.girinst.org/server/RepBase/protected/repeatmaskerlibraries/RepBaseRepeatMaskerEdition-20170127.tar.gz
 
+# Install bioruby
+RUN apt-get install ruby ruby-bio
+
 ONBUILD WORKDIR /usr/local/RepeatMasker
 ONBUILD ADD repeatmaskerlibraries.tar.gz /usr/local/RepeatMasker
 ONBUILD RUN cd /usr/local/RepeatMasker && util/buildRMLibFromEMBL.pl Libraries/RMRBSeqs.embl > Libraries/RepeatMasker.lib \
