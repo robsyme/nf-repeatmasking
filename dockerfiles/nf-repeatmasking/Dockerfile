@@ -130,7 +130,7 @@ RUN apt-get install -qqy aragorn
 # http://www.girinst.org/server/RepBase/protected/repeatmaskerlibraries/RepBaseRepeatMaskerEdition-20170127.tar.gz
 
 # Install bioruby
-RUN apt-get install ruby ruby-bio
+RUN apt-get install -qqy ruby ruby-bio
 
 ONBUILD WORKDIR /usr/local/RepeatMasker
 ONBUILD ADD repeatmaskerlibraries.tar.gz /usr/local/RepeatMasker
