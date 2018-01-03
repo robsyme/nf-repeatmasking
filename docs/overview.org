@@ -23,11 +23,11 @@
     # Make an (almost) empty Dockerfile.
     #  All of the important instructions are in the repeatmasker-onbuild image
     #  You can view them here: https://github.com/robsyme/nextflow-annotate/blob/master/Dockerfiles/RepeatMasker-onbuild/Dockerfile
-    echo "FROM robsyme/nf-repeatmasking" > Dockerfile
+    echo "FROM robsyme/nf-repeatmasking-onbuild" > Dockerfile
 
     # Build a new docker image called 'nf-repeatmasking'.
     #  When building, this image looks for a file called 'repeatmaskerlibraries.tar.gz' which it pulls into the image.
-    docker build -t repeats .
+    docker build -t robsyme/nf-repeatmasking .
   #+END_SRC
 
 * Walkthrough
