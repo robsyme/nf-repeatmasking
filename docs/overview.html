@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2017-09-19 Tue 12:46 -->
+<!-- 2018-01-03 Wed 16:44 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Repeat Masking Pipeline</title>
@@ -68,6 +68,7 @@
   pre.src-fortran:before { content: 'Fortran'; }
   pre.src-gnuplot:before { content: 'gnuplot'; }
   pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
   pre.src-java:before { content: 'Java'; }
   pre.src-js:before { content: 'Javascript'; }
   pre.src-latex:before { content: 'LaTeX'; }
@@ -234,25 +235,26 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org001a937">1. Installing</a></li>
-<li><a href="#org4b54c25">2. Walkthrough</a>
+<li><a href="#org2722ddc">1. Installing</a></li>
+<li><a href="#orgb236b89">2. Walkthrough</a>
 <ul>
-<li><a href="#orgaee6fa9">2.1. Introduction</a></li>
-<li><a href="#org0e37714">2.2. Parameter Setup</a></li>
-<li><a href="#org9b7ba0a">2.3. Collection of relatively recent LTR retrotranposons</a></li>
-<li><a href="#orgc80f98e">2.4. Collection of relatively old LTR retrotransposons</a></li>
-<li><a href="#org4252d0b">2.5. Cleaning LTR results</a></li>
-<li><a href="#org1585eaf">2.6. Identify elements with nested insertions</a></li>
-<li><a href="#org2be82d0">2.7. Final Masking</a></li>
-<li><a href="#orgc5bb1eb">2.8. Summary tables and figures</a></li>
+<li><a href="#orgf3006e5">2.1. Introduction</a></li>
+<li><a href="#org18191d0">2.2. Parameter Setup</a></li>
+<li><a href="#orgafd5440">2.3. Collection of relatively recent LTR retrotranposons</a></li>
+<li><a href="#org57db473">2.4. Collection of relatively old LTR retrotransposons</a></li>
+<li><a href="#orgbe302cb">2.5. Cleaning LTR results</a></li>
+<li><a href="#orgcae4ec4">2.6. Identify elements with nested insertions</a></li>
+<li><a href="#orgeadaf53">2.7. Noncoding RNA</a></li>
+<li><a href="#org41d7682">2.8. Final Masking</a></li>
+<li><a href="#org478605c">2.9. Summary tables and figures</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org001a937" class="outline-2">
-<h2 id="org001a937"><span class="section-number-2">1</span> Installing</h2>
+<div id="outline-container-org2722ddc" class="outline-2">
+<h2 id="org2722ddc"><span class="section-number-2">1</span> Installing</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Ideally, the only prerequisites would be <a href="https://www.nextflow.io/">Nextflow</a> and
@@ -267,32 +269,33 @@ run:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh"><span class="org-builtin">cd</span> <span class="org-sh-quoted-exec">`mktemp -d`</span>
+<pre class="src src-sh"><span style="color: #c678dd;">cd</span> <span style="color: #51afef; font-weight: bold;">`mktemp -d`</span>
 
-<span class="org-comment-delimiter"># </span><span class="org-comment">Download the RepBase repeat library (replace RB_USERNAME and RB_PASSWORD with your username and password)</span>
-wget --user $<span class="org-variable-name">RB_USERNAME</span> <span class="org-sh-escaped-newline">\</span>
-     --password $<span class="org-variable-name">RB_PASSWORD</span> <span class="org-sh-escaped-newline">\</span>
-     --output-document repeatmaskerlibraries.tar.gz <span class="org-sh-escaped-newline">\</span>
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">Download the RepBase repeat library (replace RB_USERNAME and RB_PASSWORD with your username and password)</span>
+wget --user $<span style="color: #dcaeea;">RB_USERNAME</span> <span style="color: #98be65;">\</span>
+     --password $<span style="color: #dcaeea;">RB_PASSWORD</span> <span style="color: #98be65;">\</span>
+     --output-document repeatmaskerlibraries.tar.gz <span style="color: #98be65;">\</span>
      http://www.girinst.org/server/RepBase/protected/repeatmaskerlibraries/repeatmaskerlibraries-20140131.tar.gz
 
-<span class="org-comment-delimiter"># </span><span class="org-comment">Make an (almost) empty Dockerfile.</span>
-<span class="org-comment-delimiter">#  </span><span class="org-comment">All of the important instructions are in the repeatmasker-onbuild image</span>
-<span class="org-comment-delimiter">#  </span><span class="org-comment">You can view them here: https://github.com/robsyme/nextflow-annotate/blob/master/Dockerfiles/RepeatMasker-onbuild/Dockerfile</span>
-<span class="org-builtin">echo</span> <span class="org-string">"FROM robsyme/nf-repeatmasking"</span> &gt; Dockerfile
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">Make an (almost) empty Dockerfile.</span>
+<span style="color: #5B6268;">#  </span><span style="color: #5B6268;">All of the important instructions are in the repeatmasker-onbuild image</span>
+<span style="color: #5B6268;">#  </span><span style="color: #5B6268;">You can view them here: https://github.com/robsyme/nextflow-annotate/blob/master/Dockerfiles/RepeatMasker-onbuild/Dockerfile</span>
+<span style="color: #c678dd;">echo</span> <span style="color: #98be65;">"FROM robsyme/nf-repeatmasking"</span> &gt; Dockerfile
 
-<span class="org-comment-delimiter"># </span><span class="org-comment">Build a new docker image called 'nf-repeatmasking'.</span>
-<span class="org-comment-delimiter">#  </span><span class="org-comment">When building, this image looks for a file called 'repeatmaskerlibraries.tar.gz' which it pulls into the image.</span>
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">Build a new docker image called 'nf-repeatmasking'.</span>
+<span style="color: #5B6268;">#  </span><span style="color: #5B6268;">When building, this image looks for a file called 'repeatmaskerlibraries.tar.gz' which it pulls into the image.</span>
 docker build -t repeats .
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org4b54c25" class="outline-2">
-<h2 id="org4b54c25"><span class="section-number-2">2</span> Walkthrough</h2>
+<div id="outline-container-orgb236b89" class="outline-2">
+<h2 id="orgb236b89"><span class="section-number-2">2</span> Walkthrough</h2>
 <div class="outline-text-2" id="text-2">
-</div><div id="outline-container-orgaee6fa9" class="outline-3">
-<h3 id="orgaee6fa9"><span class="section-number-3">2.1</span> Introduction</h3>
+</div>
+<div id="outline-container-orgf3006e5" class="outline-3">
+<h3 id="orgf3006e5"><span class="section-number-3">2.1</span> Introduction</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
 This is a <a href="https://en.wikipedia.org/wiki/Literate_programming">literate-programming</a> style walk through the pipeline,
@@ -301,8 +304,8 @@ tangled to compose the  pipline, which is written out to <a href="../main.nf"><c
 </p>
 </div>
 </div>
-<div id="outline-container-org0e37714" class="outline-3">
-<h3 id="org0e37714"><span class="section-number-3">2.2</span> Parameter Setup</h3>
+<div id="outline-container-org18191d0" class="outline-3">
+<h3 id="org18191d0"><span class="section-number-3">2.2</span> Parameter Setup</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 There is some necessary setup and housekeeping to begin. This is
@@ -311,29 +314,30 @@ and the output location for our final figures and tables.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-groovy"><span class="org-variable-name">VERSION</span> = <span class="org-string">"1.0.0"</span>
+<pre class="src src-groovy">VERSION = <span style="color: #98be65;">"1.0.0"</span>
 
-params.reference = <span class="org-string">'data/example/genome.fasta'</span>
-params.trnaprot = <span class="org-string">'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'</span>
-params.trnanuc = <span class="org-string">'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'</span>
-params.outdir = <span class="org-string">'output'</span>
+params.reference = <span style="color: #98be65;">'data/example/genome.fasta'</span>
+params.trnaprot = <span style="color: #98be65;">'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'</span>
+params.trnanuc = <span style="color: #98be65;">'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'</span>
+params.outdir = <span style="color: #98be65;">'output'</span>
+params.minRepLength = 250
 
-<span class="org-variable-name">trnanuc</span> = file(params.trnanuc)
-<span class="org-variable-name">trnaprot</span> = file(params.trnaprot)
-<span class="org-variable-name">reference</span> = file(params.reference)
+trnanuc = file(params.trnanuc)
+trnaprot = file(params.trnaprot)
+reference = file(params.reference)
 
-log.info <span class="org-string">""</span>
-log.info <span class="org-string">"R E P E A T M A S K I N G  ~  version "</span> + VERSION
-log.info <span class="org-string">"reference input    : </span><span class="org-variable-name">${params.reference}</span><span class="org-string">"</span>
-log.info <span class="org-string">"output directory   : </span><span class="org-variable-name">${params.outdir}</span><span class="org-string">"</span>
-log.info <span class="org-string">""</span>
+log.info <span style="color: #98be65;">""</span>
+log.info <span style="color: #98be65;">"R E P E A T M A S K I N G  ~  version "</span> + VERSION
+log.info <span style="color: #98be65;">"reference input    : </span><span style="color: #dcaeea;">${params.reference}</span><span style="color: #98be65;">"</span>
+log.info <span style="color: #98be65;">"output directory   : </span><span style="color: #dcaeea;">${params.outdir}</span><span style="color: #98be65;">"</span>
+log.info <span style="color: #98be65;">""</span>
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org9b7ba0a" class="outline-3">
-<h3 id="org9b7ba0a"><span class="section-number-3">2.3</span> Collection of relatively recent LTR retrotranposons</h3>
+<div id="outline-container-orgafd5440" class="outline-3">
+<h3 id="orgafd5440"><span class="section-number-3">2.3</span> Collection of relatively recent LTR retrotranposons</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
 The rationale for initial collection of recent LTR elements is
@@ -374,70 +378,71 @@ and if the flanking sequence <i>also</i> aligns, we discard it.
 
 <div class="org-src-container">
 <pre class="src src-groovy">process recentLTRs {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
+          cache <span style="color: #98be65;">'deep'</span>
 
   input:
-  file <span class="org-string">'genome.fasta'</span> from reference
-  file <span class="org-string">'eukaryotic-tRNAs.fasta.gz'</span> from trnanuc
+  file <span style="color: #98be65;">'genome.fasta'</span> from reference
+  file <span style="color: #98be65;">'eukaryotic-tRNAs.fasta.gz'</span> from trnanuc
 
   output:
-  set age, <span class="org-string">'seqfile.result'</span> into ltrHarvestResultsNew
-  set age, <span class="org-string">'seqfile.result'</span> into ltrHarvestResultsForExemplarNew
-  set age, <span class="org-string">'seqfile.outinner'</span> into ltrHarvestInnerNew
-  set age, <span class="org-string">'seqfile.outinner'</span> into outinnerForBlastXNew
-  set age, <span class="org-string">'CRL_Step2_Passed_Elements.fasta'</span>, <span class="org-string">'Repeat_down*.fasta'</span>, <span class="org-string">'Repeat_up*.fasta'</span> into recentLTRs
+  set age, <span style="color: #98be65;">'seqfile.result'</span> into ltrHarvestResultsNew
+  set age, <span style="color: #98be65;">'seqfile.result'</span> into ltrHarvestResultsForExemplarNew
+  set age, <span style="color: #98be65;">'seqfile.outinner'</span> into ltrHarvestInnerNew
+  set age, <span style="color: #98be65;">'seqfile.outinner'</span> into outinnerForBlastXNew
+  set age, <span style="color: #98be65;">'CRL_Step2_Passed_Elements.fasta'</span>, <span style="color: #98be65;">'Repeat_down*.fasta'</span>, <span style="color: #98be65;">'Repeat_up*.fasta'</span> into recentLTRs
 
   script:
-  <span class="org-variable-name">age</span> = <span class="org-string">'new'</span>
-  <span class="org-string">"""</span>
-<span class="org-string">gt suffixerator -db genome.fasta -indexname genome.fasta -tis -suf -lcp -des -ssp -dna</span>
+  age = <span style="color: #98be65;">'new'</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">gt suffixerator -db genome.fasta -indexname genome.fasta -tis -suf -lcp -des -ssp -dna</span>
 
-<span class="org-string">gt ltrharvest \</span>
-<span class="org-string"> -index genome.fasta \</span>
-<span class="org-string"> -out seqfile.out \</span>
-<span class="org-string"> -outinner seqfile.outinner \</span>
-<span class="org-string"> -gff3 seqfile.gff \</span>
-<span class="org-string"> -minlenltr 100 \</span>
-<span class="org-string"> -maxlenltr 6000 \</span>
-<span class="org-string"> -mindistltr 1500 \</span>
-<span class="org-string"> -maxdistltr 25000 \</span>
-<span class="org-string"> -mintsd 5 \</span>
-<span class="org-string"> -maxtsd 5 \</span>
-<span class="org-string"> -motif tgca \</span>
-<span class="org-string"> -similar 99 \</span>
-<span class="org-string"> -vic 10 \</span>
-<span class="org-string">&gt; seqfile.result</span>
+<span style="color: #98be65;">gt ltrharvest \</span>
+<span style="color: #98be65;"> -index genome.fasta \</span>
+<span style="color: #98be65;"> -out seqfile.out \</span>
+<span style="color: #98be65;"> -outinner seqfile.outinner \</span>
+<span style="color: #98be65;"> -gff3 seqfile.gff \</span>
+<span style="color: #98be65;"> -minlenltr 100 \</span>
+<span style="color: #98be65;"> -maxlenltr 6000 \</span>
+<span style="color: #98be65;"> -mindistltr 1500 \</span>
+<span style="color: #98be65;"> -maxdistltr 25000 \</span>
+<span style="color: #98be65;"> -mintsd 5 \</span>
+<span style="color: #98be65;"> -maxtsd 5 \</span>
+<span style="color: #98be65;"> -motif tgca \</span>
+<span style="color: #98be65;"> -similar 99 \</span>
+<span style="color: #98be65;"> -vic 10 \</span>
+<span style="color: #98be65;">&gt; seqfile.result</span>
 
-<span class="org-string">gt gff3 \</span>
-<span class="org-string"> -sort seqfile.gff \</span>
-<span class="org-string">&gt; seqfile.gff.sort</span>
+<span style="color: #98be65;">gt gff3 \</span>
+<span style="color: #98be65;"> -sort seqfile.gff \</span>
+<span style="color: #98be65;">&gt; seqfile.gff.sort</span>
 
-<span class="org-string">zcat eukaryotic-tRNAs.fasta.gz &gt; eukaryotic-tRNAs.fasta</span>
+<span style="color: #98be65;">zcat eukaryotic-tRNAs.fasta.gz &gt; eukaryotic-tRNAs.fasta</span>
 
-<span class="org-string">gt ltrdigest \</span>
-<span class="org-string"> -trnas eukaryotic-tRNAs.fasta \</span>
-<span class="org-string"> seqfile.gff.sort \</span>
-<span class="org-string"> genome.fasta \</span>
-<span class="org-string">&gt; seqfile.gff.dgt</span>
+<span style="color: #98be65;">gt ltrdigest \</span>
+<span style="color: #98be65;"> -trnas eukaryotic-tRNAs.fasta \</span>
+<span style="color: #98be65;"> seqfile.gff.sort \</span>
+<span style="color: #98be65;"> genome.fasta \</span>
+<span style="color: #98be65;">&gt; seqfile.gff.dgt</span>
 
-<span class="org-string">CRL_Step1.pl \</span>
-<span class="org-string"> --gff seqfile.gff.dgt</span>
+<span style="color: #98be65;">CRL_Step1.pl \</span>
+<span style="color: #98be65;"> --gff seqfile.gff.dgt</span>
 
-<span class="org-string">CRL_Step2.pl \</span>
-<span class="org-string"> --step1 CRL_Step1_Passed_Elements.txt \</span>
-<span class="org-string"> --repeatfile seqfile.out \</span>
-<span class="org-string"> --resultfile seqfile.result \</span>
-<span class="org-string"> --sequencefile genome.fasta \</span>
-<span class="org-string"> --removed_repeats CRL_Step2_Passed_Elements.fasta</span>
-<span class="org-string">  """</span>
+<span style="color: #98be65;">CRL_Step2.pl \</span>
+<span style="color: #98be65;"> --step1 CRL_Step1_Passed_Elements.txt \</span>
+<span style="color: #98be65;"> --repeatfile seqfile.out \</span>
+<span style="color: #98be65;"> --resultfile seqfile.result \</span>
+<span style="color: #98be65;"> --sequencefile genome.fasta \</span>
+<span style="color: #98be65;"> --removed_repeats CRL_Step2_Passed_Elements.fasta</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orgc80f98e" class="outline-3">
-<h3 id="orgc80f98e"><span class="section-number-3">2.4</span> Collection of relatively old LTR retrotransposons</h3>
+<div id="outline-container-org57db473" class="outline-3">
+<h3 id="org57db473"><span class="section-number-3">2.4</span> Collection of relatively old LTR retrotransposons</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
 Collection of relatively old LTRs is enabled by reducing the
@@ -448,68 +453,69 @@ otherwise identical to <code>recentLTRs</code>).
 
 <div class="org-src-container">
 <pre class="src src-groovy">process olderLTRs {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
+          cache <span style="color: #98be65;">'deep'</span>
 
   input:
-  file <span class="org-string">'genome.fasta'</span> from reference
-  file <span class="org-string">'eukaryotic-tRNAs.fasta.gz'</span> from trnanuc
+  file <span style="color: #98be65;">'genome.fasta'</span> from reference
+  file <span style="color: #98be65;">'eukaryotic-tRNAs.fasta.gz'</span> from trnanuc
 
   output:
-  set age, <span class="org-string">'seqfile.result'</span> into ltrHarvestResultsOld
-  set age, <span class="org-string">'seqfile.result'</span> into ltrHarvestResultsForExemplarOld
-  set age, <span class="org-string">'seqfile.outinner'</span> into ltrHarvestInnerOld
-  set age, <span class="org-string">'seqfile.outinner'</span> into outinnerForBlastXOld
-  set age, <span class="org-string">'CRL_Step2_Passed_Elements.fasta'</span>, <span class="org-string">'Repeat_down*.fasta'</span>, <span class="org-string">'Repeat_up*.fasta'</span> into olderLTRs
+  set age, <span style="color: #98be65;">'seqfile.result'</span> into ltrHarvestResultsOld
+  set age, <span style="color: #98be65;">'seqfile.result'</span> into ltrHarvestResultsForExemplarOld
+  set age, <span style="color: #98be65;">'seqfile.outinner'</span> into ltrHarvestInnerOld
+  set age, <span style="color: #98be65;">'seqfile.outinner'</span> into outinnerForBlastXOld
+  set age, <span style="color: #98be65;">'CRL_Step2_Passed_Elements.fasta'</span>, <span style="color: #98be65;">'Repeat_down*.fasta'</span>, <span style="color: #98be65;">'Repeat_up*.fasta'</span> into olderLTRs
 
   script:
-  <span class="org-variable-name">age</span> = <span class="org-string">'old'</span>
-  <span class="org-string">"""</span>
-<span class="org-string">gt suffixerator -db genome.fasta -indexname genome.fasta -tis -suf -lcp -des -ssp -dna</span>
+  age = <span style="color: #98be65;">'old'</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">gt suffixerator -db genome.fasta -indexname genome.fasta -tis -suf -lcp -des -ssp -dna</span>
 
-<span class="org-string">gt ltrharvest \</span>
-<span class="org-string"> -index genome.fasta \</span>
-<span class="org-string"> -out seqfile.out \</span>
-<span class="org-string"> -outinner seqfile.outinner \</span>
-<span class="org-string"> -gff3 seqfile.gff \</span>
-<span class="org-string"> -minlenltr 100 \</span>
-<span class="org-string"> -maxlenltr 6000 \</span>
-<span class="org-string"> -mindistltr 1500 \</span>
-<span class="org-string"> -maxdistltr 25000 \</span>
-<span class="org-string"> -mintsd 5 \</span>
-<span class="org-string"> -maxtsd 5 \</span>
-<span class="org-string"> -vic 10 \</span>
-<span class="org-string">&gt; seqfile.result</span>
+<span style="color: #98be65;">gt ltrharvest \</span>
+<span style="color: #98be65;"> -index genome.fasta \</span>
+<span style="color: #98be65;"> -out seqfile.out \</span>
+<span style="color: #98be65;"> -outinner seqfile.outinner \</span>
+<span style="color: #98be65;"> -gff3 seqfile.gff \</span>
+<span style="color: #98be65;"> -minlenltr 100 \</span>
+<span style="color: #98be65;"> -maxlenltr 6000 \</span>
+<span style="color: #98be65;"> -mindistltr 1500 \</span>
+<span style="color: #98be65;"> -maxdistltr 25000 \</span>
+<span style="color: #98be65;"> -mintsd 5 \</span>
+<span style="color: #98be65;"> -maxtsd 5 \</span>
+<span style="color: #98be65;"> -vic 10 \</span>
+<span style="color: #98be65;">&gt; seqfile.result</span>
 
-<span class="org-string">gt gff3 \</span>
-<span class="org-string"> -sort seqfile.gff \</span>
-<span class="org-string">&gt; seqfile.gff.sort</span>
+<span style="color: #98be65;">gt gff3 \</span>
+<span style="color: #98be65;"> -sort seqfile.gff \</span>
+<span style="color: #98be65;">&gt; seqfile.gff.sort</span>
 
-<span class="org-string">zcat eukaryotic-tRNAs.fasta.gz &gt; eukaryotic-tRNAs.fasta</span>
+<span style="color: #98be65;">zcat eukaryotic-tRNAs.fasta.gz &gt; eukaryotic-tRNAs.fasta</span>
 
-<span class="org-string">gt ltrdigest \</span>
-<span class="org-string"> -trnas eukaryotic-tRNAs.fasta \</span>
-<span class="org-string"> seqfile.gff.sort \</span>
-<span class="org-string"> genome.fasta \</span>
-<span class="org-string">&gt; seqfile.gff.dgt</span>
+<span style="color: #98be65;">gt ltrdigest \</span>
+<span style="color: #98be65;"> -trnas eukaryotic-tRNAs.fasta \</span>
+<span style="color: #98be65;"> seqfile.gff.sort \</span>
+<span style="color: #98be65;"> genome.fasta \</span>
+<span style="color: #98be65;">&gt; seqfile.gff.dgt</span>
 
-<span class="org-string">CRL_Step1.pl \</span>
-<span class="org-string"> --gff seqfile.gff.dgt</span>
+<span style="color: #98be65;">CRL_Step1.pl \</span>
+<span style="color: #98be65;"> --gff seqfile.gff.dgt</span>
 
-<span class="org-string">CRL_Step2.pl \</span>
-<span class="org-string"> --step1 CRL_Step1_Passed_Elements.txt \</span>
-<span class="org-string"> --repeatfile seqfile.out \</span>
-<span class="org-string"> --resultfile seqfile.result \</span>
-<span class="org-string"> --sequencefile genome.fasta \</span>
-<span class="org-string"> --removed_repeats CRL_Step2_Passed_Elements.fasta</span>
-<span class="org-string">  """</span>
+<span style="color: #98be65;">CRL_Step2.pl \</span>
+<span style="color: #98be65;"> --step1 CRL_Step1_Passed_Elements.txt \</span>
+<span style="color: #98be65;"> --repeatfile seqfile.out \</span>
+<span style="color: #98be65;"> --resultfile seqfile.result \</span>
+<span style="color: #98be65;"> --sequencefile genome.fasta \</span>
+<span style="color: #98be65;"> --removed_repeats CRL_Step2_Passed_Elements.fasta</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org4252d0b" class="outline-3">
-<h3 id="org4252d0b"><span class="section-number-3">2.5</span> Cleaning LTR results</h3>
+<div id="outline-container-orgbe302cb" class="outline-3">
+<h3 id="orgbe302cb"><span class="section-number-3">2.5</span> Cleaning LTR results</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
 LTRs (both new and old) identified above will almost certainly
@@ -539,33 +545,33 @@ thresholds.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-groovy"><span class="org-variable-name">ltrs</span> = recentLTRs.mix(olderLTRs)
-<span class="org-variable-name">ltrHarvestResults</span> = ltrHarvestResultsOld.mix(ltrHarvestResultsNew)
-<span class="org-variable-name">ltrHarvestInner</span> = ltrHarvestInnerOld.mix(ltrHarvestInnerNew)
-<span class="org-variable-name">outinnerForBlastX</span> = outinnerForBlastXOld.mix(outinnerForBlastXNew)
-<span class="org-variable-name">ltrHarvestResultsForExemplar</span> = ltrHarvestResultsForExemplarOld.mix(ltrHarvestResultsForExemplarNew)
+<pre class="src src-groovy">ltrs = recentLTRs.mix(olderLTRs)
+ltrHarvestResults = ltrHarvestResultsOld.mix(ltrHarvestResultsNew)
+ltrHarvestInner = ltrHarvestInnerOld.mix(ltrHarvestInnerNew)
+outinnerForBlastX = outinnerForBlastXOld.mix(outinnerForBlastXNew)
+ltrHarvestResultsForExemplar = ltrHarvestResultsForExemplarOld.mix(ltrHarvestResultsForExemplarNew)
 </pre>
 </div>
 
 <div class="org-src-container">
 <pre class="src src-groovy">process CRL_Step3 {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
   tag { age }
 
   input:
-  set age, <span class="org-string">'CRL_Step2_Passed_Elements.fasta'</span>, <span class="org-string">'Repeat_down*.fasta'</span>, <span class="org-string">'Repeat_up*.fasta'</span> from ltrs
+  set age, <span style="color: #98be65;">'CRL_Step2_Passed_Elements.fasta'</span>, <span style="color: #98be65;">'Repeat_down*.fasta'</span>, <span style="color: #98be65;">'Repeat_up*.fasta'</span> from ltrs
 
   output:
-  set age, <span class="org-string">'CRL_Step3_Passed_Elements.fasta'</span> into step3Passed
-  set age, <span class="org-string">'CRL_Step3_Passed_Elements.fasta'</span> into step3PassedForExemplars
+  set age, <span style="color: #98be65;">'CRL_Step3_Passed_Elements.fasta'</span> into step3Passed
+  set age, <span style="color: #98be65;">'CRL_Step3_Passed_Elements.fasta'</span> into step3PassedForExemplars
 
-  <span class="org-string">"""</span>
-<span class="org-string">CRL_Step3.pl \</span>
-<span class="org-string"> --directory . \</span>
-<span class="org-string"> --step2 CRL_Step2_Passed_Elements.fasta \</span>
-<span class="org-string"> --pidentity 60 \</span>
-<span class="org-string"> --seq_c 25</span>
-<span class="org-string">  """</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">CRL_Step3.pl \</span>
+<span style="color: #98be65;"> --directory . \</span>
+<span style="color: #98be65;"> --step2 CRL_Step2_Passed_Elements.fasta \</span>
+<span style="color: #98be65;"> --pidentity 60 \</span>
+<span style="color: #98be65;"> --seq_c 25</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
@@ -598,32 +604,32 @@ the sequence of the left (5'end) LTR sequence.
 .set { nestedInput }
 
 process identifyNestedInsetions {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
   tag { age }
   input:
-  file <span class="org-string">'genome.fasta'</span> from reference
-  set age, <span class="org-string">'seqfile.result'</span>, <span class="org-string">'CRL_Step3_Passed_Elements.fasta'</span> from nestedInput
+  file <span style="color: #98be65;">'genome.fasta'</span> from reference
+  set age, <span style="color: #98be65;">'seqfile.result'</span>, <span style="color: #98be65;">'CRL_Step3_Passed_Elements.fasta'</span> from nestedInput
 
   output:
-  set age, <span class="org-string">'repeats_to_mask_LTR.fasta'</span> into repeatsToMaskLTR
+  set age, <span style="color: #98be65;">'repeats_to_mask_LTR.fasta'</span> into repeatsToMaskLTR
 
-  <span class="org-string">"""</span>
-<span class="org-string">ltr_library.pl \</span>
-<span class="org-string"> --resultfile seqfile.result \</span>
-<span class="org-string"> --step3 CRL_Step3_Passed_Elements.fasta \</span>
-<span class="org-string"> --sequencefile genome.fasta</span>
-<span class="org-string">cat lLTR_Only.lib \</span>
-<span class="org-string">| awk 'BEGIN {RS = "&gt;" ; FS = "\\n" ; ORS = ""} \$2 {print "&gt;"\$0}' \</span>
-<span class="org-string">&gt; repeats_to_mask_LTR.fasta</span>
-<span class="org-string">  """</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">ltr_library.pl \</span>
+<span style="color: #98be65;"> --resultfile seqfile.result \</span>
+<span style="color: #98be65;"> --step3 CRL_Step3_Passed_Elements.fasta \</span>
+<span style="color: #98be65;"> --sequencefile genome.fasta</span>
+<span style="color: #98be65;">cat lLTR_Only.lib \</span>
+<span style="color: #98be65;">| awk 'BEGIN {RS = "&gt;" ; FS = "\\n" ; ORS = ""} \$2 {print "&gt;"\$0}' \</span>
+<span style="color: #98be65;">&gt; repeats_to_mask_LTR.fasta</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org1585eaf" class="outline-3">
-<h3 id="org1585eaf"><span class="section-number-3">2.6</span> Identify elements with nested insertions</h3>
+<div id="outline-container-orgcae4ec4" class="outline-3">
+<h3 id="orgcae4ec4"><span class="section-number-3">2.6</span> Identify elements with nested insertions</h3>
 <div class="outline-text-3" id="text-2-6">
 <p>
 Retrotranposons are frequently nested with each other or inserted
@@ -636,28 +642,28 @@ considered as elements nested with other insertions.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-groovy">process <span class="org-type">RepeatMasker1</span> {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+<pre class="src src-groovy">process <span style="color: #ECBE7B;">RepeatMasker1</span> {
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
   tag { age }
 
   input:
-  set age, <span class="org-string">'repeats_to_mask_LTR.fasta'</span>, <span class="org-string">'seqfile.outinner'</span> from repeatsToMaskLTR.combine(ltrHarvestInner, by: 0)
+  set age, <span style="color: #98be65;">'repeats_to_mask_LTR.fasta'</span>, <span style="color: #98be65;">'seqfile.outinner'</span> from repeatsToMaskLTR.combine(ltrHarvestInner, by: 0)
 
   output:
-  set age, <span class="org-string">'seqfile.outinner.out'</span>, <span class="org-string">'seqfile.outinner.masked'</span> into repeatMasker1Unclean
+  set age, <span style="color: #98be65;">'seqfile.outinner.out'</span>, <span style="color: #98be65;">'seqfile.outinner.masked'</span> into repeatMasker1Unclean
 
-  <span class="org-string">"""</span>
-<span class="org-string">RepeatMasker \</span>
-<span class="org-string"> -lib repeats_to_mask_LTR.fasta \</span>
-<span class="org-string"> -nolow \</span>
-<span class="org-string"> -no_is \</span>
-<span class="org-string"> -dir . \</span>
-<span class="org-string"> seqfile.outinner</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">RepeatMasker \</span>
+<span style="color: #98be65;"> -lib repeats_to_mask_LTR.fasta \</span>
+<span style="color: #98be65;"> -nolow \</span>
+<span style="color: #98be65;"> -no_is \</span>
+<span style="color: #98be65;"> -dir . \</span>
+<span style="color: #98be65;"> seqfile.outinner</span>
 
-<span class="org-string">if [ ! -f seqfile.outinner.masked ]; then</span>
-<span class="org-string">  cp seqfile.outinner seqfile.outinner.masked</span>
-<span class="org-string">fi</span>
-<span class="org-string">  """</span>
+<span style="color: #98be65;">if [ ! -f seqfile.outinner.masked ]; then</span>
+<span style="color: #98be65;">  cp seqfile.outinner seqfile.outinner.masked</span>
+<span style="color: #98be65;">fi</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
@@ -667,51 +673,51 @@ considered as elements nested with other insertions.
   tag { age }
 
   input:
-  set age, <span class="org-string">'seqfile.outinner.out'</span>, <span class="org-string">'seqfile.outinner.masked'</span> from repeatMasker1Unclean
+  set age, <span style="color: #98be65;">'seqfile.outinner.out'</span>, <span style="color: #98be65;">'seqfile.outinner.masked'</span> from repeatMasker1Unclean
 
   output:
-  set age, <span class="org-string">'seqfile.outinner.clean'</span> into repeatMasker1Clean
+  set age, <span style="color: #98be65;">'seqfile.outinner.clean'</span> into repeatMasker1Clean
 
-  <span class="org-string">"""</span>
-<span class="org-string">cleanRM.pl seqfile.outinner.out seqfile.outinner.masked &gt; seqfile.outinner.unmasked</span>
-<span class="org-string">rmshortinner.pl seqfile.outinner.unmasked 50 &gt; seqfile.outinner.clean</span>
-<span class="org-string">  """</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">cleanRM.pl seqfile.outinner.out seqfile.outinner.masked &gt; seqfile.outinner.unmasked</span>
+<span style="color: #98be65;">rmshortinner.pl seqfile.outinner.unmasked 50 &gt; seqfile.outinner.clean</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
 
 <div class="org-src-container">
 <pre class="src src-groovy">process blastX {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
   tag { age }
   cpus 4
 
   input:
-  file <span class="org-string">'Tpases020812DNA.fasta.gz'</span> from trnaprot
-  set age, <span class="org-string">'seqfile.outinner.clean'</span>, <span class="org-string">'seqfile.outinner'</span> from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
+  file <span style="color: #98be65;">'Tpases020812DNA.fasta.gz'</span> from trnaprot
+  set age, <span style="color: #98be65;">'seqfile.outinner.clean'</span>, <span style="color: #98be65;">'seqfile.outinner'</span> from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
 
   output:
-  set age, <span class="org-string">'passed_outinner_sequence.fasta'</span> into blastxPassed
+  set age, <span style="color: #98be65;">'passed_outinner_sequence.fasta'</span> into blastxPassed
 
-  <span class="org-string">"""</span>
-<span class="org-string">zcat Tpases020812DNA.fasta.gz &gt; Tpases020812DNA.fasta</span>
-<span class="org-string">makeblastdb -in Tpases020812DNA.fasta -dbtype prot</span>
-<span class="org-string">blastx \</span>
-<span class="org-string"> -query seqfile.outinner.clean \</span>
-<span class="org-string"> -db Tpases020812DNA.fasta \</span>
-<span class="org-string"> -evalue 1e-20 \</span>
-<span class="org-string"> -num_descriptions 10 \</span>
-<span class="org-string"> -num_threads </span><span class="org-variable-name">${task.cpus}</span><span class="org-string"> \</span>
-<span class="org-string"> -out seqfile.outinner.clean_blastx.out.txt</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">zcat Tpases020812DNA.fasta.gz &gt; Tpases020812DNA.fasta</span>
+<span style="color: #98be65;">makeblastdb -in Tpases020812DNA.fasta -dbtype prot</span>
+<span style="color: #98be65;">blastx \</span>
+<span style="color: #98be65;"> -query seqfile.outinner.clean \</span>
+<span style="color: #98be65;"> -db Tpases020812DNA.fasta \</span>
+<span style="color: #98be65;"> -evalue 1e-20 \</span>
+<span style="color: #98be65;"> -num_descriptions 10 \</span>
+<span style="color: #98be65;"> -num_threads </span><span style="color: #dcaeea;">${task.cpus}</span><span style="color: #98be65;"> \</span>
+<span style="color: #98be65;"> -out seqfile.outinner.clean_blastx.out.txt</span>
 
-<span class="org-string">outinner_blastx_parse.pl \</span>
-<span class="org-string"> --blastx seqfile.outinner.clean_blastx.out.txt \</span>
-<span class="org-string"> --outinner seqfile.outinner</span>
+<span style="color: #98be65;">outinner_blastx_parse.pl \</span>
+<span style="color: #98be65;"> --blastx seqfile.outinner.clean_blastx.out.txt \</span>
+<span style="color: #98be65;"> --outinner seqfile.outinner</span>
 
-<span class="org-string">if [ ! -s passed_outinner_sequence.fasta ]; then</span>
-<span class="org-string">  echo -e '&gt;dummy empty sequence\nACTACTAC' &gt; passed_outinner_sequence.fasta</span>
-<span class="org-string">fi</span>
-<span class="org-string">  """</span>
+<span style="color: #98be65;">if [ ! -s passed_outinner_sequence.fasta ]; then</span>
+<span style="color: #98be65;">  echo -e '&gt;dummy empty sequence\nACTACTAC' &gt; passed_outinner_sequence.fasta</span>
+<span style="color: #98be65;">fi</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
@@ -723,43 +729,43 @@ considered as elements nested with other insertions.
 .set { forExemplarBuilding }
 
 process buildExemplars {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
   tag { age }
   cpus 4
 
   input:
-  file <span class="org-string">'genome.fasta'</span> from reference
-  set age, <span class="org-string">'passed_outinner_sequence.fasta'</span>, <span class="org-string">'CRL_Step3_Passed_Elements.fasta'</span>, <span class="org-string">'seqfile.result'</span> from forExemplarBuilding
+  file <span style="color: #98be65;">'genome.fasta'</span> from reference
+  set age, <span style="color: #98be65;">'passed_outinner_sequence.fasta'</span>, <span style="color: #98be65;">'CRL_Step3_Passed_Elements.fasta'</span>, <span style="color: #98be65;">'seqfile.result'</span> from forExemplarBuilding
 
   output:
-  set age, <span class="org-string">'LTR.lib'</span> into exemplars
+  set age, <span style="color: #98be65;">'LTR.lib'</span> into exemplars
 
-  <span class="org-string">"""</span>
-<span class="org-string">CRL_Step4.pl \</span>
-<span class="org-string"> --step3 CRL_Step3_Passed_Elements.fasta \</span>
-<span class="org-string"> --resultfile seqfile.result \</span>
-<span class="org-string"> --innerfile passed_outinner_sequence.fasta \</span>
-<span class="org-string"> --sequencefile genome.fasta</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">CRL_Step4.pl \</span>
+<span style="color: #98be65;"> --step3 CRL_Step3_Passed_Elements.fasta \</span>
+<span style="color: #98be65;"> --resultfile seqfile.result \</span>
+<span style="color: #98be65;"> --innerfile passed_outinner_sequence.fasta \</span>
+<span style="color: #98be65;"> --sequencefile genome.fasta</span>
 
-<span class="org-string">for lib in lLTRs_Seq_For_BLAST.fasta Inner_Seq_For_BLAST.fasta; do</span>
-<span class="org-string">  makeblastdb -in \$lib -dbtype nucl</span>
-<span class="org-string">  blastn \</span>
-<span class="org-string">   -query \${lib} \</span>
-<span class="org-string">   -db \${lib} \</span>
-<span class="org-string">   -evalue 1e-10 \</span>
-<span class="org-string">   -num_threads </span><span class="org-variable-name">${task.cpus}</span><span class="org-string"> \</span>
-<span class="org-string">   -num_descriptions 1000 \</span>
-<span class="org-string">   -out \${lib}.out</span>
-<span class="org-string">done</span>
+<span style="color: #98be65;">for lib in lLTRs_Seq_For_BLAST.fasta Inner_Seq_For_BLAST.fasta; do</span>
+<span style="color: #98be65;">  makeblastdb -in \$lib -dbtype nucl</span>
+<span style="color: #98be65;">  blastn \</span>
+<span style="color: #98be65;">   -query \${lib} \</span>
+<span style="color: #98be65;">   -db \${lib} \</span>
+<span style="color: #98be65;">   -evalue 1e-10 \</span>
+<span style="color: #98be65;">   -num_threads </span><span style="color: #dcaeea;">${task.cpus}</span><span style="color: #98be65;"> \</span>
+<span style="color: #98be65;">   -num_descriptions 1000 \</span>
+<span style="color: #98be65;">   -out \${lib}.out</span>
+<span style="color: #98be65;">done</span>
 
-<span class="org-string">CRL_Step5.pl \</span>
-<span class="org-string"> --LTR_blast lLTRs_Seq_For_BLAST.fasta.out \</span>
-<span class="org-string"> --inner_blast Inner_Seq_For_BLAST.fasta.out \</span>
-<span class="org-string"> --step3 CRL_Step3_Passed_Elements.fasta \</span>
-<span class="org-string"> --final LTR.lib \</span>
-<span class="org-string"> --pcoverage 90 \</span>
-<span class="org-string"> --pidentity 80</span>
-<span class="org-string">  """</span>
+<span style="color: #98be65;">CRL_Step5.pl \</span>
+<span style="color: #98be65;"> --LTR_blast lLTRs_Seq_For_BLAST.fasta.out \</span>
+<span style="color: #98be65;"> --inner_blast Inner_Seq_For_BLAST.fasta.out \</span>
+<span style="color: #98be65;"> --step3 CRL_Step3_Passed_Elements.fasta \</span>
+<span style="color: #98be65;"> --final LTR.lib \</span>
+<span style="color: #98be65;"> --pcoverage 90 \</span>
+<span style="color: #98be65;"> --pidentity 80</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
@@ -772,150 +778,288 @@ at 80% identity in 90% of the element length) are excluded.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-groovy"><span class="org-variable-name">newLTRs</span> = <span class="org-type">Channel</span>.create()
-<span class="org-variable-name">oldLTRs</span> = <span class="org-type">Channel</span>.create()
+<pre class="src src-groovy">newLTRs = <span style="color: #ECBE7B;">Channel</span>.create()
+oldLTRs = <span style="color: #ECBE7B;">Channel</span>.create()
 
 exemplars
-.choice( newLTRs, oldLTRs ) { <span class="org-variable-name">it</span>[0] == <span class="org-string">"new"</span> ? 0 : 1 }
+.choice( newLTRs, oldLTRs ) { <span style="color: #dcaeea;">it</span>[0] == <span style="color: #98be65;">"new"</span> ? 0 : 1 }
 
 process removeDuplicates {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
 
   input:
-  set _, <span class="org-string">'ltrs.new.fasta'</span> from newLTRs
-  set _, <span class="org-string">'ltrs.old.fasta'</span> from oldLTRs
+  set _, <span style="color: #98be65;">'ltrs.new.fasta'</span> from newLTRs
+  set _, <span style="color: #98be65;">'ltrs.old.fasta'</span> from oldLTRs
 
   output:
-  set <span class="org-string">'ltrs.old.fasta.masked'</span>, <span class="org-string">'ltrs.new.fasta'</span> into bothLTRforMasking
+  set <span style="color: #98be65;">'ltrs.old.fasta.masked'</span>, <span style="color: #98be65;">'ltrs.new.fasta'</span> into bothLTRforMasking
 
-  <span class="org-string">"RepeatMasker -lib ltrs.new.fasta -dir . ltrs.old.fasta"</span>
+  <span style="color: #98be65;">"RepeatMasker -lib ltrs.new.fasta -dir . ltrs.old.fasta"</span>
 }
 
 process filterOldLTRs {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
 
   input:
-  set <span class="org-string">'ltrs.old.fasta.masked'</span>, <span class="org-string">'ltrs.new.fasta'</span> from bothLTRforMasking
+  set <span style="color: #98be65;">'ltrs.old.fasta.masked'</span>, <span style="color: #98be65;">'ltrs.new.fasta'</span> from bothLTRforMasking
 
   output:
-  file <span class="org-string">'allLTRs.fasta'</span> into allLTR
+  file <span style="color: #98be65;">'allLTRs.fasta'</span> into allLTR
 
-  <span class="org-string">"""</span>
-<span class="org-string">remove_masked_sequence.pl \</span>
-<span class="org-string">--masked_elements ltrs.old.fasta.masked \</span>
-<span class="org-string">--outfile ltrs.old.final.fasta</span>
-<span class="org-string">cat ltrs.new.fasta ltrs.old.final.fasta &gt; allLTRs.fasta</span>
-<span class="org-string">  """</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">remove_masked_sequence.pl \</span>
+<span style="color: #98be65;">--masked_elements ltrs.old.fasta.masked \</span>
+<span style="color: #98be65;">--outfile ltrs.old.final.fasta</span>
+<span style="color: #98be65;">cat ltrs.new.fasta ltrs.old.final.fasta &gt; allLTRs.fasta</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
 
 <div class="org-src-container">
 <pre class="src src-groovy">allLTR
-.splitFasta(record: [id: <span class="org-constant">true</span>, sequence: <span class="org-constant">true</span> ])
-.collectFile( name: <span class="org-string">'allLTRs.fasta'</span> ) { <span class="org-string">"&gt;"</span> + <span class="org-variable-name">it</span>.id + <span class="org-string">"#LTR\n"</span> + <span class="org-variable-name">it</span>.sequence }
+.splitFasta(record: [id: <span style="color: #a9a1e1;">true</span>, sequence: <span style="color: #a9a1e1;">true</span> ])
+.collectFile( name: <span style="color: #98be65;">'allLTRs.fasta'</span> ) { <span style="color: #98be65;">"&gt;"</span> + <span style="color: #dcaeea;">it</span>.id + <span style="color: #98be65;">"#LTR\n"</span> + <span style="color: #dcaeea;">it</span>.sequence }
 .tap { allLTR2 }
 .set { inputForRM2 }
 
-process <span class="org-type">RepeatMasker2</span> {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+process <span style="color: #ECBE7B;">RepeatMasker2</span> {
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
   cpus 10
 
   input:
-  file <span class="org-string">'genome.fasta'</span> from reference
-  file <span class="org-string">'allLTR.lib'</span> from inputForRM2
+  file <span style="color: #98be65;">'genome.fasta'</span> from reference
+  file <span style="color: #98be65;">'allLTR.lib'</span> from inputForRM2
 
   output:
-  file <span class="org-string">'genome.fasta.masked'</span> into genomeLtrMasked
+  file <span style="color: #98be65;">'genome.fasta.masked'</span> into genomeLtrMasked
 
-  <span class="org-string">"""</span>
-<span class="org-string">RepeatMasker \</span>
-<span class="org-string"> -no_is \</span>
-<span class="org-string"> -nolow \</span>
-<span class="org-string"> -pa </span><span class="org-variable-name">${task.cpus}</span><span class="org-string"> \</span>
-<span class="org-string"> -lib allLTR.lib \</span>
-<span class="org-string"> -dir . \</span>
-<span class="org-string"> genome.fasta</span>
-<span class="org-string">  """</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">RepeatMasker \</span>
+<span style="color: #98be65;"> -no_is \</span>
+<span style="color: #98be65;"> -nolow \</span>
+<span style="color: #98be65;"> -pa </span><span style="color: #dcaeea;">${task.cpus}</span><span style="color: #98be65;"> \</span>
+<span style="color: #98be65;"> -lib allLTR.lib \</span>
+<span style="color: #98be65;"> -dir . \</span>
+<span style="color: #98be65;"> genome.fasta</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
 
 <div class="org-src-container">
-<pre class="src src-groovy">process <span class="org-type">RepeatModeler</span> {
-  container <span class="org-string">'repeats'</span>
+<pre class="src src-groovy">process <span style="color: #ECBE7B;">RepeatModeler</span> {
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
   cpus 4
 
   input:
-  file <span class="org-string">'genome.masked'</span> from genomeLtrMasked
+  file <span style="color: #98be65;">'genome.masked'</span> from genomeLtrMasked
 
   output:
-  file <span class="org-string">'consensi.fa.classified'</span> into rmOutput
+  file <span style="color: #98be65;">'consensi.fa.classified'</span> into rmOutput
 
-  <span class="org-string">"""</span>
-<span class="org-string">rmaskedpart.pl genome.masked 50 &gt; umseqfile</span>
-<span class="org-string">BuildDatabase -name umseqfiledb -engine ncbi umseqfile</span>
-<span class="org-string">RepeatModeler -pa </span><span class="org-variable-name">${task.cpus}</span><span class="org-string"> -database umseqfiledb &gt;&amp; umseqfile.out</span>
-<span class="org-string">mv RM*/consensi.fa.classified consensi.fa.classified</span>
-<span class="org-string">  """</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">rmaskedpart.pl genome.masked 50 | sed '/^\$/d' &gt; umseqfile</span>
+<span style="color: #98be65;">BuildDatabase -name umseqfiledb -engine ncbi umseqfile</span>
+<span style="color: #98be65;">RepeatModeler -pa </span><span style="color: #dcaeea;">${task.cpus}</span><span style="color: #98be65;"> -database umseqfiledb &gt;&amp; umseqfile.out</span>
+<span style="color: #98be65;">mv RM*/consensi.fa.classified consensi.fa.classified</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
 
 <div class="org-src-container">
-<pre class="src src-groovy"><span class="org-variable-name">identityUnknown</span> = <span class="org-type">Channel</span>.create()
-<span class="org-variable-name">identityKnown</span> = <span class="org-type">Channel</span>.create()
+<pre class="src src-groovy">identityUnknown = <span style="color: #ECBE7B;">Channel</span>.create()
+identityKnown = <span style="color: #ECBE7B;">Channel</span>.create()
 
 rmOutput
-.splitFasta(record: [id: <span class="org-constant">true</span>, text: <span class="org-constant">true</span>])
-.choice(identityUnknown, identityKnown) { record -&gt; record.id =~ <span class="org-string">/#Unknown/</span> ? 0 : 1 }
+.splitFasta(record: [id: <span style="color: #a9a1e1;">true</span>, text: <span style="color: #a9a1e1;">true</span>])
+.choice(identityUnknown, identityKnown) { record -&gt; record.id =~ <span style="color: #98be65;">/#Unknown/</span> ? 0 : 1 }
 
-<span class="org-variable-name">repeatmaskerUnknowns</span> = identityUnknown.collectFile() { record -&gt; [<span class="org-string">'unknown.fasta'</span>, record.text] }
-<span class="org-variable-name">repeatmaskerKnowns</span> = identityKnown.collectFile() { record -&gt; [<span class="org-string">'known.fasta'</span>, record.text] }
+identityUnknown
+.collectFile() { record -&gt; [<span style="color: #98be65;">'unknown.fasta'</span>, record.text] }
+.set { repeatmaskerUnknowns }
+
+identityKnown
+.collectFile() { record -&gt; [<span style="color: #98be65;">'known.fasta'</span>, record.text] }
+.tap { repeatmaskerKnowns1 }
+.set{ repeatmaskerKnowns }
+</pre>
+</div>
+
+<p>
+We'd like to get a better idea about what these 'unknown elements'
+are. It's possible that they are known transposons that have been
+RIPped beyond recognition. To retrieve these, we can pull out an
+ailgnment of these repeat instances (with RepeatMasker), run <a href="https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-11-655">DeRIP</a>
+over each alignment and then push them back into the identification
+pipeline (RepeatModeler classify script).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy">    process searchForUnidentifiedElements {
+      container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
+
+      input:
+      file <span style="color: #98be65;">'genome.fasta'</span> from reference
+      file <span style="color: #98be65;">'unknown_elements.fasta'</span> from repeatmaskerKnowns1
+
+      output:
+      set <span style="color: #98be65;">'genome.fasta.align'</span>, <span style="color: #98be65;">'unknown_elements.fasta'</span> into unknownAlignments
+
+      <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">    RepeatMasker \</span>
+<span style="color: #98be65;">     -lib unknown_elements.fasta \</span>
+<span style="color: #98be65;">     -alignments \</span>
+<span style="color: #98be65;">     -nolow \</span>
+<span style="color: #98be65;">     -no_is \</span>
+<span style="color: #98be65;">     -dir . \</span>
+<span style="color: #98be65;">     -inv \</span>
+<span style="color: #98be65;">     genome.fasta</span>
+<span style="color: #98be65;">      """</span>
+    }
+
+    process derip {
+      container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
+
+      input:
+      set <span style="color: #98be65;">'genome.fasta.align'</span>, <span style="color: #98be65;">'unknown_elements.fasta'</span> from unknownAlignments
+
+      output:
+      file <span style="color: #98be65;">'deripped.unknowns.fasta'</span> into derippedUnknowns
+
+      <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">      rmalignment_to_fasta.rb genome.fasta.align unknown_elements.fasta</span>
+<span style="color: #98be65;">      for file in alignment*; do</span>
+<span style="color: #98be65;">        derip.rb \$file</span>
+<span style="color: #98be65;">      done &gt; deripped.unknowns.fasta</span>
+<span style="color: #98be65;">      """</span>
+    }
+
+    process classifyDeripped {
+  container <span style="color: #98be65;">'repeats'</span>
+
+      input:
+  file <span style="color: #98be65;">'transposases.fasta.gz'</span> from trnaprot
+      file <span style="color: #98be65;">'repeatmodeler_unknowns.deripped.fasta'</span> from derippedUnknowns
+
+  output:
+  file <span style="color: #98be65;">'identified_elements.txt'</span> into identifiedDerippedTransposons
+      file <span style="color: #98be65;">'unknown_elements.txt'</span> into unidentifiedDerippedTransposons
+
+      <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">zcat transposases.fasta.gz &gt; transposases.fasta</span>
+<span style="color: #98be65;">makeblastdb \</span>
+<span style="color: #98be65;"> -in transposases.fasta \</span>
+<span style="color: #98be65;"> -dbtype prot</span>
+<span style="color: #98be65;">blastx \</span>
+<span style="color: #98be65;"> -query repeatmodeler_unknowns.deripped.fasta \</span>
+<span style="color: #98be65;"> -db transposases.fasta \</span>
+<span style="color: #98be65;"> -evalue 1e-10 \</span>
+<span style="color: #98be65;"> -num_descriptions 10 \</span>
+<span style="color: #98be65;"> -num_threads </span><span style="color: #dcaeea;">${task.cpus}</span><span style="color: #98be65;"> \</span>
+<span style="color: #98be65;"> -out modelerunknown_blast_results.txt</span>
+<span style="color: #98be65;">transposon_blast_parse.pl \</span>
+<span style="color: #98be65;"> --blastx modelerunknown_blast_results.txt \</span>
+<span style="color: #98be65;"> --modelerunknown repeatmodeler_unknowns.deripped.fasta</span>
+<span style="color: #98be65;">      """</span>
+    }
+
+    identifiedDerippedTransposons.subscribe{<span style="color: #51afef;"> println</span>(<span style="color: #98be65;">"Identified, deripped: </span><span style="color: #dcaeea;">${it}</span><span style="color: #98be65;">"</span>) }
+
 </pre>
 </div>
 
 <div class="org-src-container">
 <pre class="src src-groovy">process transposonBlast {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
   cpus 4
 
   input:
-  file <span class="org-string">'transposases.fasta.gz'</span> from trnaprot
-  file <span class="org-string">'repeatmodeler_unknowns.fasta'</span> from repeatmaskerUnknowns
+  file <span style="color: #98be65;">'transposases.fasta.gz'</span> from trnaprot
+  file <span style="color: #98be65;">'repeatmodeler_unknowns.fasta'</span> from repeatmaskerUnknowns
 
   output:
-  file <span class="org-string">'identified_elements.txt'</span> into identifiedTransposons
+  file <span style="color: #98be65;">'identified_elements.txt'</span> into identifiedTransposons
+      file <span style="color: #98be65;">'unknown_elements.txt'</span> into unidentifiedTransposons
 
-  <span class="org-string">"""</span>
-<span class="org-string">zcat transposases.fasta.gz &gt; transposases.fasta</span>
-<span class="org-string">makeblastdb \</span>
-<span class="org-string"> -in transposases.fasta \</span>
-<span class="org-string"> -dbtype prot</span>
-<span class="org-string">blastx \</span>
-<span class="org-string"> -query repeatmodeler_unknowns.fasta \</span>
-<span class="org-string"> -db transposases.fasta \</span>
-<span class="org-string"> -evalue 1e-10 \</span>
-<span class="org-string"> -num_descriptions 10 \</span>
-<span class="org-string"> -num_threads </span><span class="org-variable-name">${task.cpus}</span><span class="org-string"> \</span>
-<span class="org-string"> -out modelerunknown_blast_results.txt</span>
-<span class="org-string">transposon_blast_parse.pl \</span>
-<span class="org-string"> --blastx modelerunknown_blast_results.txt \</span>
-<span class="org-string"> --modelerunknown repeatmodeler_unknowns.fasta</span>
-<span class="org-string">  """</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">zcat transposases.fasta.gz &gt; transposases.fasta</span>
+<span style="color: #98be65;">makeblastdb \</span>
+<span style="color: #98be65;"> -in transposases.fasta \</span>
+<span style="color: #98be65;"> -dbtype prot</span>
+<span style="color: #98be65;">blastx \</span>
+<span style="color: #98be65;"> -query repeatmodeler_unknowns.fasta \</span>
+<span style="color: #98be65;"> -db transposases.fasta \</span>
+<span style="color: #98be65;"> -evalue 1e-10 \</span>
+<span style="color: #98be65;"> -num_descriptions 10 \</span>
+<span style="color: #98be65;"> -num_threads </span><span style="color: #dcaeea;">${task.cpus}</span><span style="color: #98be65;"> \</span>
+<span style="color: #98be65;"> -out modelerunknown_blast_results.txt</span>
+<span style="color: #98be65;">transposon_blast_parse.pl \</span>
+<span style="color: #98be65;"> --blastx modelerunknown_blast_results.txt \</span>
+<span style="color: #98be65;"> --modelerunknown repeatmodeler_unknowns.fasta</span>
+<span style="color: #98be65;">  """</span>
 }
+
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org2be82d0" class="outline-3">
-<h3 id="org2be82d0"><span class="section-number-3">2.7</span> Final Masking</h3>
+<div id="outline-container-orgeadaf53" class="outline-3">
+<h3 id="orgeadaf53"><span class="section-number-3">2.7</span> Noncoding RNA</h3>
 <div class="outline-text-3" id="text-2-7">
+<p>
+We'll borrow the excellent ncRNA prediction steps from the
+excellent <a href="https://github.com/sanger-pathogens/companion">Companion annotation pipeline</a>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-groovy">process predict_ncRNA {
+  container <span style="color: #98be65;">'sangerpathogens/companion:latest'</span>
+
+  input:
+  file <span style="color: #98be65;">'genome.fasta'</span> from reference
+
+  output:
+  file <span style="color: #98be65;">'cm_out'</span> into cmtblouts
+
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">cp /opt/data/cm/rnas.cm models.cm</span>
+<span style="color: #98be65;">cmpress -F models.cm</span>
+<span style="color: #98be65;">cmsearch --cpu 1 --tblout cm_out --cut_ga models.cm genome.fasta</span>
+<span style="color: #98be65;">  """</span>
+}
+
+process merge_ncrnas {
+  container <span style="color: #98be65;">'sangerpathogens/companion:latest'</span>
+  cache <span style="color: #98be65;">'deep'</span>
+
+  input:
+  file <span style="color: #98be65;">'cmtblout'</span> from cmtblouts
+
+  output:
+  file <span style="color: #98be65;">'ncrna.gff3'</span> into ncrnafile
+
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">  infernal_to_gff3.lua &lt; </span><span style="color: #dcaeea;">${cmtblout}</span><span style="color: #98be65;"> &gt; 1</span>
+<span style="color: #98be65;">  gt gff3 -sort -tidy -retainids 1 &gt; ncrna.gff3</span>
+<span style="color: #98be65;">  """</span>
+}
+
+ncrnafile.println()
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org41d7682" class="outline-3">
+<h3 id="org41d7682"><span class="section-number-3">2.8</span> Final Masking</h3>
+<div class="outline-text-3" id="text-2-8">
 <div class="org-src-container">
 <pre class="src src-groovy">repeatmaskerKnowns
 .mix(identifiedTransposons)
-.collectFile() { <span class="org-variable-name">it</span>.text }
+.collectFile() { <span style="color: #dcaeea;">it</span>.text }
 .combine(allLTR2)
 .set { knownRepeats }
 </pre>
@@ -923,102 +1067,121 @@ rmOutput
 
 <div class="org-src-container">
 <pre class="src src-groovy">process repeatMaskerKnowns {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
-  publishDir <span class="org-string">"</span><span class="org-variable-name">${params.outdir}</span><span class="org-string">/repeatMaskerKnowns"</span>, mode: <span class="org-string">'copy'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
+  publishDir <span style="color: #98be65;">"</span><span style="color: #dcaeea;">${params.outdir}</span><span style="color: #98be65;">/repeatMaskerKnowns"</span>, mode: <span style="color: #98be65;">'copy'</span>
 
   input:
-  file <span class="org-string">'reference.fasta'</span> from reference
-  set <span class="org-string">'knownTransposons.lib'</span>, <span class="org-string">'allLTRs.lib'</span> from knownRepeats
+  file <span style="color: #98be65;">'reference.fasta'</span> from reference
+  set <span style="color: #98be65;">'knownTransposons.lib'</span>, <span style="color: #98be65;">'allLTRs.lib'</span> from knownRepeats
 
   output:
-  set <span class="org-string">'reference.fasta.out'</span>, <span class="org-string">'reference.fasta.masked'</span> into repeatMaskerKnownsMasked
-  set <span class="org-string">'reference.fasta.out.gff'</span>, <span class="org-string">'knownRepeats.library.fasta'</span>
+  set <span style="color: #98be65;">'reference.fasta.out'</span>, <span style="color: #98be65;">'reference.fasta.masked'</span> into repeatMaskerKnownsMasked
+  set <span style="color: #98be65;">'reference.fasta.out.gff'</span>, <span style="color: #98be65;">'knownRepeats.library.fasta'</span>
 
-  <span class="org-string">"""</span>
-<span class="org-string">cat *.lib &gt; knownRepeats.library.fasta</span>
-<span class="org-string">RepeatMasker \</span>
-<span class="org-string"> -lib knownRepeats.library.fasta \</span>
-<span class="org-string"> -nolow \</span>
-<span class="org-string"> -no_is \</span>
-<span class="org-string"> -dir . \</span>
-<span class="org-string"> -gff \</span>
-<span class="org-string"> -s \</span>
-<span class="org-string"> reference.fasta</span>
-<span class="org-string">  """</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">cat *.lib &gt; knownRepeats.library.fasta</span>
+<span style="color: #98be65;">RepeatMasker \</span>
+<span style="color: #98be65;"> -lib knownRepeats.library.fasta \</span>
+<span style="color: #98be65;"> -nolow \</span>
+<span style="color: #98be65;"> -no_is \</span>
+<span style="color: #98be65;"> -dir . \</span>
+<span style="color: #98be65;"> -gff \</span>
+<span style="color: #98be65;"> -s \</span>
+<span style="color: #98be65;"> reference.fasta</span>
+<span style="color: #98be65;">  """</span>
+}
+
+process removeShortMatches {
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
+  publishDir <span style="color: #98be65;">"</span><span style="color: #dcaeea;">${params.outdir}</span><span style="color: #98be65;">/cleanMasked"</span>, mode: <span style="color: #98be65;">'copy'</span>
+
+  input:
+  file <span style="color: #98be65;">'reference.fa'</span> from reference
+  set <span style="color: #98be65;">'rm.out'</span>, <span style="color: #98be65;">'rm.masked'</span> from repeatMaskerKnownsMasked
+
+  output:
+  set <span style="color: #98be65;">'rm.trimmed.out'</span>, <span style="color: #98be65;">'rm.trimmed.masked'</span> into repeatMaskerKnownsMaskedTrimmed
+
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">head -n 3 rm.out &gt; rm.trimmed.out</span>
+<span style="color: #98be65;">tail -n +4 rm.out | awk '\$7 - \$6 &gt; </span><span style="color: #dcaeea;">${params.minRepLength}</span><span style="color: #98be65;">' &gt;&gt; rm.trimmed.out</span>
+<span style="color: #98be65;">tail -n +4 rm.out | awk 'BEGIN{OFS="\\t"} \$7 - \$6 &gt; </span><span style="color: #dcaeea;">${params.minRepLength}</span><span style="color: #98be65;"> {print \$5, \$6, \$7}' &gt;&gt; rm.trimmed.bed</span>
+<span style="color: #98be65;">maskFastaFromBed -fi reference.fa -bed rm.trimmed.bed -fo rm.trimmed.masked -soft</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
 
 <div class="org-src-container">
 <pre class="src src-groovy">process octfta {
-  container <span class="org-string">'robsyme/nf-repeatmasking'</span>
+  container <span style="color: #98be65;">'robsyme/nf-repeatmasking'</span>
 
   input:
-  file <span class="org-string">'reference.fa'</span> from reference
-  set <span class="org-string">'rm.out'</span>, <span class="org-string">'rm.masked'</span> from repeatMaskerKnownsMasked
+  file <span style="color: #98be65;">'reference.fa'</span> from reference
+  set <span style="color: #98be65;">'rm.out'</span>, <span style="color: #98be65;">'rm.masked'</span> from repeatMaskerKnownsMaskedTrimmed
 
   output:
-  file <span class="org-string">'summary.tsv'</span> into repeatmaskerSummaryTable
+  file <span style="color: #98be65;">'summary.tsv'</span> into repeatmaskerSummaryTable
 
-  <span class="org-string">"""</span>
-<span class="org-string">build_dictionary.pl --rm rm.out &gt; ltr.dict</span>
-<span class="org-string">one_code_to_find_them_all.pl --rm rm.out --ltr ltr.dict --fasta reference.fa</span>
-<span class="org-string">echo -e 'Family\\tElement Length\\tFragments\\tCopies\\tSolo_LTR\\tTotal_Bp\\tCover\\tchrname' &gt; summary.tsv</span>
-<span class="org-string">for file in *.copynumber.csv; do</span>
-<span class="org-string">  chrname=`echo \$file | sed -e 's/^rm\\.out_//' -e 's/.copynumber.csv\$//'`</span>
-<span class="org-string">  awk -v chrname=\$chrname 'BEGIN{OFS="\\t"} NR&gt;1 &amp;&amp; /^[^#]/ {print(\$0, chrname)}' \$file</span>
-<span class="org-string">done &gt;&gt; summary.tsv</span>
-<span class="org-string">  """</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">build_dictionary.pl --rm rm.out &gt; ltr.dict</span>
+<span style="color: #98be65;">one_code_to_find_them_all.pl --rm rm.out --ltr ltr.dict --fasta reference.fa</span>
+<span style="color: #98be65;">echo -e 'Family\\tElement Length\\tFragments\\tCopies\\tSolo_LTR\\tTotal_Bp\\tCover\\tchrname' &gt; summary.tsv</span>
+<span style="color: #98be65;">for file in *.copynumber.csv; do</span>
+<span style="color: #98be65;">  chrname=`echo \$file | sed -e 's/^rm\\.out_//' -e 's/.copynumber.csv\$//'`</span>
+<span style="color: #98be65;">  awk -v chrname=\$chrname 'BEGIN{OFS="\\t"} NR&gt;1 &amp;&amp; /^[^#]/ {print(\$0, chrname)}' \$file</span>
+<span style="color: #98be65;">done &gt;&gt; summary.tsv</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orgc5bb1eb" class="outline-3">
-<h3 id="orgc5bb1eb"><span class="section-number-3">2.8</span> Summary tables and figures</h3>
-<div class="outline-text-3" id="text-2-8">
+<div id="outline-container-org478605c" class="outline-3">
+<h3 id="org478605c"><span class="section-number-3">2.9</span> Summary tables and figures</h3>
+<div class="outline-text-3" id="text-2-9">
 <div class="org-src-container">
 <pre class="src src-groovy">process summarise {
-  publishDir <span class="org-string">"</span><span class="org-variable-name">${params.outdir}</span><span class="org-string">/summarise"</span>, mode: <span class="org-string">'copy'</span>
+  publishDir <span style="color: #98be65;">"</span><span style="color: #dcaeea;">${params.outdir}</span><span style="color: #98be65;">/summarise"</span>, mode: <span style="color: #98be65;">'copy'</span>
 
   input:
-  file <span class="org-string">'summary.tsv'</span> from repeatmaskerSummaryTable
+  file <span style="color: #98be65;">'summary.tsv'</span> from repeatmaskerSummaryTable
 
   output:
-  set <span class="org-string">'summary.bycontig.tidy.tsv'</span>, <span class="org-string">'summary.tidy.tsv'</span>
+  set <span style="color: #98be65;">'summary.bycontig.tidy.tsv'</span>, <span style="color: #98be65;">'summary.tidy.tsv'</span>
 
-  <span class="org-string">"""</span>
-<span class="org-string">#!/usr/bin/env Rscript</span>
-<span class="org-string">library(ggplot2)</span>
-<span class="org-string">library(dplyr)</span>
-<span class="org-string">library(tidyr)</span>
-<span class="org-string">library(magrittr)</span>
+  <span style="color: #98be65;">"""</span>
+<span style="color: #98be65;">#!/usr/bin/env Rscript</span>
+<span style="color: #98be65;">library(ggplot2)</span>
+<span style="color: #98be65;">library(dplyr)</span>
+<span style="color: #98be65;">library(tidyr)</span>
+<span style="color: #98be65;">library(magrittr)</span>
 
-<span class="org-string">data &lt;- read.table('summary.tsv', header=TRUE) %&gt;%</span>
-<span class="org-string">        separate(Family, into=c("Family", "Subfamily"), sep="/") %&gt;%</span>
-<span class="org-string">        group_by(chrname, Family, Subfamily) %&gt;%</span>
-<span class="org-string">        summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %&gt;%</span>
-<span class="org-string">        unite("Family", Family, Subfamily, sep="/")</span>
+<span style="color: #98be65;">data &lt;- read.table('summary.tsv', header=TRUE) %&gt;%</span>
+<span style="color: #98be65;">        separate(Family, into=c("Family", "Subfamily"), sep="/") %&gt;%</span>
+<span style="color: #98be65;">        group_by(chrname, Family, Subfamily) %&gt;%</span>
+<span style="color: #98be65;">        summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %&gt;%</span>
+<span style="color: #98be65;">        unite("Family", Family, Subfamily, sep="/")</span>
 
-<span class="org-string">write.table(data, file='summary.bycontig.tidy.tsv')</span>
+<span style="color: #98be65;">write.table(data, file='summary.bycontig.tidy.tsv')</span>
 
-<span class="org-string">data &lt;- read.table('summary.tsv', header=TRUE) %&gt;%</span>
-<span class="org-string">        separate(Family, into=c("Family", "Subfamily"), sep="/") %&gt;%</span>
-<span class="org-string">        group_by(Family, Subfamily) %&gt;%</span>
-<span class="org-string">        summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %&gt;%</span>
-<span class="org-string">        unite("Family", Family, Subfamily, sep="/")</span>
+<span style="color: #98be65;">data &lt;- read.table('summary.tsv', header=TRUE) %&gt;%</span>
+<span style="color: #98be65;">        separate(Family, into=c("Family", "Subfamily"), sep="/") %&gt;%</span>
+<span style="color: #98be65;">        group_by(Family, Subfamily) %&gt;%</span>
+<span style="color: #98be65;">        summarise(fragment.count = sum(Fragments), length = sum(Total_Bp)) %&gt;%</span>
+<span style="color: #98be65;">        unite("Family", Family, Subfamily, sep="/")</span>
 
-<span class="org-string">write.table(data, file='summary.tidy.tsv', row.names = FALSE)</span>
-<span class="org-string">  """</span>
+<span style="color: #98be65;">write.table(data, file='summary.tidy.tsv', row.names = FALSE)</span>
+<span style="color: #98be65;">  """</span>
 }
 </pre>
 </div>
 
 <div class="org-src-container">
 <pre class="src src-groovy">workflow.onComplete {
-    log.info <span class="org-string">"Pipeline completed at: </span><span class="org-variable-name">$workflow.complete</span><span class="org-string">"</span>
-    log.info <span class="org-string">"Execution status: </span><span class="org-variable-name">${ workflow.success ? 'OK' : 'failed' }</span><span class="org-string">"</span>
+    log.info <span style="color: #98be65;">"Pipeline completed at: </span><span style="color: #dcaeea;">$workflow.complete</span><span style="color: #98be65;">"</span>
+    log.info <span style="color: #98be65;">"Execution status: </span><span style="color: #dcaeea;">${ workflow.success ? 'OK' : 'failed' }</span><span style="color: #98be65;">"</span>
 }
 </pre>
 </div>
@@ -1028,7 +1191,7 @@ rmOutput
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Robert Syme</p>
-<p class="date">Created: 2017-09-19 Tue 12:46</p>
+<p class="date">Created: 2018-01-03 Wed 16:44</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

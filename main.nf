@@ -424,6 +424,8 @@ process searchForUnidentifiedElements {
     }
 
     process derip {
+      container 'robsyme/nf-repeatmasking'
+
       input:
       set 'genome.fasta.align', 'unknown_elements.fasta' from unknownAlignments
 
