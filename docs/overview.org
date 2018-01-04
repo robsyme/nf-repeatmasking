@@ -638,6 +638,8 @@
      identifiedDerippedTransposons.subscribe{ println("Identified, deripped: ${it}") }
    #+END_SRC
 
+   Blast transposons against database of known elements:
+
    #+BEGIN_SRC groovy :tangle ../main.nf
      process transposonBlast {
        container 'robsyme/nf-repeatmasking'
