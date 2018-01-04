@@ -437,7 +437,7 @@ rmalignment_to_fasta.rb genome.fasta.align unknown_elements.fasta
 for file in alignment*; do
   derip.rb \$file
 done > deripped.unknowns.fasta
-    """
+  """
 }
 
 process classifyDeripped {
@@ -466,7 +466,7 @@ blastx \
 transposon_blast_parse.pl \
  --blastx modelerunknown_blast_results.txt \
  --modelerunknown repeatmodeler_unknowns.deripped.fasta
-    """
+  """
 }
 
 identifiedDerippedTransposons.subscribe{ println("Identified, deripped: ${it}") }
