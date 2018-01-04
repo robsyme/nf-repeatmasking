@@ -402,56 +402,56 @@ identityKnown
 .set{ repeatmaskerKnowns }
 
 process searchForUnidentifiedElements {
-      container 'robsyme/nf-repeatmasking'
+  container 'robsyme/nf-repeatmasking'
 
-      input:
-      file 'genome.fasta' from reference
-      file 'unknown_elements.fasta' from repeatmaskerKnowns1
+  input:
+  file 'genome.fasta' from reference
+  file 'unknown_elements.fasta' from repeatmaskerKnowns1
 
-      output:
-      set 'genome.fasta.align', 'unknown_elements.fasta' into unknownAlignments
+  output:
+  set 'genome.fasta.align', 'unknown_elements.fasta' into unknownAlignments
 
-      """
-    RepeatMasker \
-     -lib unknown_elements.fasta \
-     -alignments \
-     -nolow \
-     -no_is \
-     -dir . \
-     -inv \
-     genome.fasta
-      """
-    }
+  """
+RepeatMasker \
+ -lib unknown_elements.fasta \
+ -alignments \
+ -nolow \
+ -no_is \
+ -dir . \
+ -inv \
+ genome.fasta
+  """
+}
 
-    process derip {
-      container 'robsyme/nf-repeatmasking'
+process derip {
+  container 'robsyme/nf-repeatmasking'
 
-      input:
-      set 'genome.fasta.align', 'unknown_elements.fasta' from unknownAlignments
+  input:
+  set 'genome.fasta.align', 'unknown_elements.fasta' from unknownAlignments
 
-      output:
-      file 'deripped.unknowns.fasta' into derippedUnknowns
+  output:
+  file 'deripped.unknowns.fasta' into derippedUnknowns
 
-      """
-      rmalignment_to_fasta.rb genome.fasta.align unknown_elements.fasta
-      for file in alignment*; do
-        derip.rb \$file
-      done > deripped.unknowns.fasta
-      """
-    }
+  """
+rmalignment_to_fasta.rb genome.fasta.align unknown_elements.fasta
+for file in alignment*; do
+  derip.rb \$file
+done > deripped.unknowns.fasta
+    """
+}
 
-    process classifyDeripped {
+process classifyDeripped {
   container 'repeats'
 
-      input:
+  input:
   file 'transposases.fasta.gz' from trnaprot
-      file 'repeatmodeler_unknowns.deripped.fasta' from derippedUnknowns
+  file 'repeatmodeler_unknowns.deripped.fasta' from derippedUnknowns
 
   output:
   file 'identified_elements.txt' into identifiedDerippedTransposons
-      file 'unknown_elements.txt' into unidentifiedDerippedTransposons
+  file 'unknown_elements.txt' into unidentifiedDerippedTransposons
 
-      """
+  """
 zcat transposases.fasta.gz > transposases.fasta
 makeblastdb \
  -in transposases.fasta \
@@ -466,10 +466,10 @@ blastx \
 transposon_blast_parse.pl \
  --blastx modelerunknown_blast_results.txt \
  --modelerunknown repeatmodeler_unknowns.deripped.fasta
-      """
-    }
+    """
+}
 
-    identifiedDerippedTransposons.subscribe{ println("Identified, deripped: ${it}") }
+identifiedDerippedTransposons.subscribe{ println("Identified, deripped: ${it}") }
 
 process transposonBlast {
   container 'robsyme/nf-repeatmasking'
@@ -481,7 +481,7 @@ process transposonBlast {
 
   output:
   file 'identified_elements.txt' into identifiedTransposons
-      file 'unknown_elements.txt' into unidentifiedTransposons
+  file 'unknown_elements.txt' into unidentifiedTransposons
 
   """
 zcat transposases.fasta.gz > transposases.fasta
