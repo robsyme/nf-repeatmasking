@@ -696,6 +696,7 @@
          }
 
          process merge_ncrnas {
+           publishDir "${params.outdir}/noncoding-rna", mode: 'copy'
            container 'sangerpathogens/companion:latest'
            cache 'deep'
 

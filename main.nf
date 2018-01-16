@@ -518,6 +518,7 @@ cmsearch --cpu 1 --tblout cm_out --cut_ga models.cm genome.fasta
 }
 
 process merge_ncrnas {
+  publishDir "${params.outdir}/noncoding-rna", mode: 'copy'
   container 'sangerpathogens/companion:latest'
   cache 'deep'
 
