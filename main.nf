@@ -194,7 +194,7 @@ process RepeatMasker1 {
   set age, 'seqfile.outinner.out', 'seqfile.outinner.masked' into repeatMasker1Unclean
 
   """
-// only run RepeatMasker if the previous processes have found anything, i.e. there is something in their output file 
+# only run RepeatMasker if the previous processes have found anything, i.e. there is something in their output file 
 if [[ `wc -l repeats_to_mask_LTR.fasta | cut -c 1` != "0" ]]; then  
 
 RepeatMasker \
@@ -208,7 +208,7 @@ if [ ! -f seqfile.outinner.masked ]; then
   cp seqfile.outinner seqfile.outinner.masked
 fi
 
-//otherwise create empty dummy files in order for following processes not to crash
+#otherwise create empty dummy files in order for following processes not to crash
 else touch seqfile.outinner.masked seqfile.outinner.out;
 fi
   """
@@ -259,8 +259,8 @@ outinner_blastx_parse.pl \
 if [ ! -s passed_outinner_sequence.fasta ]; then
   echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
 fi
-/*this follows on from above, if 'old' or 'new' did not find anything, a dummy file needs to be created 
-in order for following processes not to crash*/
+#this follows on from above, if 'old' or 'new' did not find anything, a dummy file needs to be created 
+#in order for following processes not to crash
 
 if [[ `wc -l passed_outinner_sequence.fasta | cut -c 1` == "0" ]]; then
   echo -e '>dummy empty sequence\nACTACTAC' > passed_outinner_sequence.fasta
@@ -286,7 +286,7 @@ process buildExemplars {
   set age, 'LTR.lib' into exemplars
 
   """
-//Only run the scripts if previous processes found something, otherwise don't bother and create a dummy file
+#Only run the scripts if previous processes found something, otherwise don't bother and create a dummy file
 if [[ `wc -l CRL_Step3_Passed_Elements.fasta | cut -c 1` != "0" ]]; then  
   
 CRL_Step4.pl \
@@ -314,9 +314,9 @@ CRL_Step5.pl \
  --pcoverage 90 \
  --pidentity 80
  
-/*This file needs to have at least one entry, hence the dummy entry, otherwise the pipeline crashes.
-I am however not sure if this dummy sequence will influence anything else downstream and it may have
-to be dealt with later */
+#This file needs to have at least one entry, hence the dummy entry, otherwise the pipeline crashes.
+#I am however not sure if this dummy sequence will influence anything else downstream and it may have
+#to be dealt with later
 else echo -e '>dummy empty sequence\nACTACTAC' > LTR.lib;
 fi
   """
