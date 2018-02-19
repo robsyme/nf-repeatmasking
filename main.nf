@@ -2,7 +2,7 @@
 VERSION = "1.0.0"
 
 params.reference = 'data/example/genome.fasta'
-params.trnaprot = 'http://www.hrt.msu.edu/uploads/535/78637/Tpases020812.gz'
+params.trnaprot = 'http://www.canr.msu.edu/hrt/uploads/535/78637/Tpases020812.gz'
 params.trnanuc = 'http://gtrnadb2009.ucsc.edu/download/tRNAs/eukaryotic-tRNAs.fa.gz'
 params.outdir = 'output'
 params.minRepLength = 250
@@ -231,14 +231,14 @@ process blastX {
   cpus 4
 
   input:
-  file 'Tpases020812DNA.fasta.gz' from trnaprot
+  file 'Tpases020812DNA.gz' from trnaprot
   set age, 'seqfile.outinner.clean', 'seqfile.outinner' from repeatMasker1Clean.combine(outinnerForBlastX, by: 0)
 
   output:
   set age, 'passed_outinner_sequence.fasta' into blastxPassed
 
   """
-zcat Tpases020812DNA.fasta.gz > Tpases020812DNA.fasta
+zcat Tpases020812DNA.gz > Tpases020812DNA.fasta
 makeblastdb -in Tpases020812DNA.fasta -dbtype prot
 blastx \
  -query seqfile.outinner.clean \
@@ -444,7 +444,7 @@ process classifyDeripped {
   container 'repeats'
 
   input:
-  file 'transposases.fasta.gz' from trnaprot
+  file 'transposases.gz' from trnaprot
   file 'repeatmodeler_unknowns.deripped.fasta' from derippedUnknowns
 
   output:
@@ -452,7 +452,7 @@ process classifyDeripped {
   file 'unknown_elements.txt' into unidentifiedDerippedTransposons
 
   """
-zcat transposases.fasta.gz > transposases.fasta
+zcat transposases.gz > transposases.fasta
 makeblastdb \
  -in transposases.fasta \
  -dbtype prot
@@ -476,7 +476,7 @@ process transposonBlast {
   cpus 4
 
   input:
-  file 'transposases.fasta.gz' from trnaprot
+  file 'transposases.gz' from trnaprot
   file 'repeatmodeler_unknowns.fasta' from repeatmaskerUnknowns
 
   output:
@@ -484,7 +484,7 @@ process transposonBlast {
   file 'unknown_elements.txt' into unidentifiedTransposons
 
   """
-zcat transposases.fasta.gz > transposases.fasta
+zcat transposases.gz > transposases.fasta
 makeblastdb \
  -in transposases.fasta \
  -dbtype prot
